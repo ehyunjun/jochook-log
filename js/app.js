@@ -52,17 +52,17 @@ const dom = {
   tabButtons: $$(".tab-button"),
   tabPanels: $$(".tab-panel"),
   createTeamForm: $("#createTeamForm"),
-  joinTeamForm: $("#joinTeamForm"),
   teamNameInput: $("#teamNameInput"),
-  teamCodeInput: $("#teamCodeInput"),
   createdTeamInfo: $("#createdTeamInfo"),
-  joinTeamInfo: $("#joinTeamInfo"),
   teamNameDisplay: $("#teamNameDisplay"),
-  teamCodeDisplay: $("#teamCodeDisplay"),
+  makeShareUrlButton: $("#makeShareUrlButton"),
+  copyShareUrlButton: $("#copyShareUrlButton"),
+  shareUrlBox: $("#shareUrlBox"),
+  shareUrlOutput: $("#shareUrlOutput"),
+  teamShareInfo: $("#teamShareInfo"),
   memberForm: $("#memberForm"),
   memberNameInput: $("#memberNameInput"),
   memberNumberInput: $("#memberNumberInput"),
-  memberPositionInput: $("#memberPositionInput"),
   membersGrid: $("#membersGrid"),
   memberDetail: $("#memberDetail"),
   prepDateInput: $("#prepDateInput"),
@@ -114,7 +114,7 @@ let recordDraft = {
 
 function defaultState() {
   return {
-    team: { name: "", code: "" },
+    team: { name: "" },
     members: [],
     formation: {
       quarters: 2,
@@ -149,7 +149,7 @@ function normalizeState(saved) {
   const next = {
     ...base,
     ...saved,
-    team: { ...base.team, ...(saved.team || {}) },
+    team: { name: saved.team?.name || "" },
     formation: { ...base.formation, ...(saved.formation || {}) },
   };
 
@@ -179,6 +179,100 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
+function encodeShareData(data) {
+  return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+}
+
+function decodeShareData(encoded) {
+  return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(encoded)))));
+}
+
+function buildTeamShareData() {
+  return {
+    type: "jochooklog-team",
+    teamName: state.team.name || "",
+    members: sortByName(state.members).map((member) => ({
+      name: member.name,
+      number: member.number || "",
+    })),
+  };
+}
+
+function clearTeamShareUrl() {
+  if (!dom.shareUrlBox) return;
+  dom.shareUrlBox.hidden = true;
+  dom.shareUrlOutput.value = "";
+}
+
+function makeTeamShareUrl() {
+  const encoded = encodeURIComponent(encodeShareData(buildTeamShareData()));
+  const baseUrl = `${location.origin}${location.pathname}`;
+  return `${baseUrl}#team=${encoded}`;
+}
+
+function showTeamShareUrl() {
+  if (!state.team.name && !state.members.length) {
+    dom.teamShareInfo.textContent = "공유할 팀원 정보가 없습니다.";
+    return;
+  }
+
+  dom.shareUrlOutput.value = makeTeamShareUrl();
+  dom.shareUrlBox.hidden = false;
+  dom.teamShareInfo.textContent = "공유 URL이 생성되었습니다.";
+}
+
+async function copyTeamShareUrl() {
+  if (!dom.shareUrlOutput.value) {
+    showTeamShareUrl();
+  }
+
+  try {
+    await navigator.clipboard.writeText(dom.shareUrlOutput.value);
+    dom.teamShareInfo.textContent = "공유 URL을 복사했습니다.";
+  } catch {
+    dom.shareUrlOutput.select();
+    document.execCommand("copy");
+    dom.teamShareInfo.textContent = "공유 URL을 복사했습니다.";
+  }
+}
+
+function loadTeamFromShareHash() {
+  const params = new URLSearchParams(location.hash.slice(1));
+  const encoded = params.get("team");
+  if (!encoded) return false;
+
+  let data;
+  try {
+    data = decodeShareData(encoded);
+  } catch {
+    return false;
+  }
+
+  if (data?.type !== "jochooklog-team" || !Array.isArray(data.members)) return false;
+  const hasCurrentTeam = Boolean(state.team.name || state.members.length);
+  if (hasCurrentTeam && !confirm("현재 저장된 팀 정보가 있습니다. 공유 URL의 팀 정보로 덮어쓸까요?")) {
+    return false;
+  }
+
+  state.team = { name: String(data.teamName || "").trim() };
+  state.members = data.members
+    .map((member) => ({
+      id: uid("member"),
+      name: String(member.name || "").trim(),
+      number: String(member.number || "").trim(),
+      position: "",
+      createdAt: new Date().toISOString(),
+    }))
+    .filter((member) => member.name);
+
+  getMatchInfo().participantIds = state.members.map((member) => member.id);
+  cleanFormationSlotsForAvailablePlayers();
+  selectedMemberId = null;
+  selectedPoolPlayerId = null;
+  saveState();
+  return true;
+}
+
 function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
@@ -189,10 +283,6 @@ function sortByName(players) {
 
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
-}
-
-function makeTeamCode() {
-  return String(Math.floor(Math.random() * 1000000)).padStart(6, "0");
 }
 
 function ensureQuarterData(targetState = state) {
@@ -300,7 +390,6 @@ function setActiveTab(tabId) {
 
 function renderTeam() {
   dom.teamNameDisplay.textContent = state.team.name || "팀 없음";
-  dom.teamCodeDisplay.textContent = state.team.code || "-";
 
   if (!state.members.length) {
     dom.membersGrid.innerHTML = `<p class="empty-text">아직 등록된 팀원이 없습니다.</p>`;
@@ -309,11 +398,7 @@ function renderTeam() {
       .map((member) => {
         const stats = getMemberStats(member.id);
         const selectedClass = selectedMemberId === member.id ? " active" : "";
-        const badge = member.isMercenary
-          ? `<span class="badge">일일 용병</span>`
-          : member.position
-            ? `<span class="badge">${escapeHtml(member.position)}</span>`
-            : "";
+        const badge = member.isMercenary ? `<span class="badge">일일 용병</span>` : "";
         return `
           <article class="member-card${selectedClass}" data-member-id="${member.id}">
             <div class="member-card-header">
@@ -345,7 +430,6 @@ function statPill(value, label) {
 function playerMetaText(player) {
   const parts = [];
   if (player.number) parts.push(`#${player.number}`);
-  if (player.position) parts.push(player.position);
   return parts.join(" · ");
 }
 
@@ -632,16 +716,17 @@ function syncRecordDraftWithPlayers() {
   recordDraft.assists = recordDraft.assists.filter((event) => playerIds.has(event.playerId));
 }
 
-function addMember({ name, number, position, isMercenary = false }) {
+function addMember({ name, number, isMercenary = false }) {
   state.members.push({
     id: uid("member"),
     name,
     number,
-    position,
+    position: "",
     isMercenary,
     createdAt: new Date().toISOString(),
   });
   saveState();
+  clearTeamShareUrl();
   renderAll();
 }
 
@@ -656,6 +741,7 @@ function deleteMember(memberId) {
   });
   if (selectedMemberId === memberId) selectedMemberId = null;
   saveState();
+  clearTeamShareUrl();
   renderAll();
 }
 
@@ -956,27 +1042,10 @@ function bindEvents() {
       return;
     }
 
-    state.team = { name, code: makeTeamCode() };
+    state.team = { name };
+    clearTeamShareUrl();
     saveState();
-    dom.createdTeamInfo.textContent = `팀 이름: ${state.team.name} / 팀 코드: ${state.team.code}`;
-    renderAll();
-    setActiveTab("team");
-  });
-
-  dom.joinTeamForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const code = dom.teamCodeInput.value.trim();
-    if (!code) {
-      dom.joinTeamInfo.textContent = "팀 코드를 입력해 주세요.";
-      return;
-    }
-
-    state.team = {
-      name: state.team.name || "참가한 팀",
-      code,
-    };
-    saveState();
-    dom.joinTeamInfo.textContent = `팀 코드 ${code}로 참가 처리되었습니다.`;
+    dom.createdTeamInfo.textContent = `${state.team.name} 팀을 만들었습니다.`;
     renderAll();
     setActiveTab("team");
   });
@@ -989,10 +1058,12 @@ function bindEvents() {
     addMember({
       name,
       number: dom.memberNumberInput.value.trim(),
-      position: dom.memberPositionInput.value.trim(),
     });
     dom.memberForm.reset();
   });
+
+  dom.makeShareUrlButton.addEventListener("click", showTeamShareUrl);
+  dom.copyShareUrlButton.addEventListener("click", copyTeamShareUrl);
 
   dom.membersGrid.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("[data-delete-member]");
@@ -1241,4 +1312,9 @@ function bindEvents() {
 }
 
 bindEvents();
+const sharedTeamLoaded = loadTeamFromShareHash();
 renderAll();
+if (sharedTeamLoaded) {
+  setActiveTab("team");
+  dom.teamShareInfo.textContent = "공유 URL에서 팀원 정보를 불러왔습니다.";
+}

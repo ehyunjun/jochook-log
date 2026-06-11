@@ -309,7 +309,7 @@ main {
 
 .team-shell {
   display: grid;
-  grid-template-columns: 280px 1fr;
+  grid-template-columns: 300px 1fr;
   gap: 16px;
   margin-bottom: 22px;
 }
@@ -334,16 +334,41 @@ main {
   font-size: 1.3rem;
 }
 
+.team-share-box {
+  display: grid;
+  gap: 10px;
+}
+
+.share-url-row {
+  display: grid;
+  gap: 8px;
+}
+
+.share-url-row input {
+  font-size: 0.84rem;
+}
+
 .member-form {
   display: grid;
-  grid-template-columns: repeat(4, 1fr) auto;
+  grid-template-columns: 1fr;
   gap: 12px;
   align-items: end;
   padding: 18px;
 }
 
 .member-form h3 {
-  grid-column: 1 / -1;
+  margin: 0;
+}
+
+.member-form-fields {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.member-submit {
+  justify-self: end;
+  min-width: 120px;
 }
 
 .content-grid {
@@ -1115,12 +1140,12 @@ main {
     grid-template-columns: 1fr;
   }
 
-  .member-form {
+  .member-form-fields {
     grid-template-columns: 1fr 1fr;
   }
 
-  .member-form button {
-    grid-column: 1 / -1;
+  .member-submit {
+    justify-self: end;
   }
 
   .detail-panel {
@@ -1163,8 +1188,13 @@ main {
   }
 
   .settings-row,
-  .member-form {
+  .member-form,
+  .member-form-fields {
     grid-template-columns: 1fr;
+  }
+
+  .member-submit {
+    justify-self: stretch;
   }
 
   .formation-workspace {

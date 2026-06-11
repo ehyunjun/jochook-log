@@ -40,17 +40,7 @@
                 <input id="teamNameInput" type="text" placeholder="예: BDG FC" autocomplete="off" />
                 <button type="submit">팀 생성</button>
               </div>
-              <p class="helper-text" id="createdTeamInfo">팀을 만들면 임시 팀 코드가 생성됩니다.</p>
-            </form>
-
-            <form class="tool-card" id="joinTeamForm">
-              <h3>팀 참가</h3>
-              <label for="teamCodeInput">팀 코드</label>
-              <div class="inline-form">
-                <input id="teamCodeInput" type="text" inputmode="numeric" placeholder="예: 000000" maxlength="6" />
-                <button type="submit">참가</button>
-              </div>
-              <p class="helper-text" id="joinTeamInfo">현재는 서버 검증 없이 입력한 코드로 참가 처리됩니다.</p>
+              <p class="helper-text" id="createdTeamInfo">팀을 만든 뒤 나의 팀 화면에서 팀원을 등록해 주세요.</p>
             </form>
           </div>
         </div>
@@ -70,21 +60,29 @@
               <span class="label-text">팀 이름</span>
               <strong id="teamNameDisplay">팀 없음</strong>
             </div>
-            <div>
-              <span class="label-text">팀 코드</span>
-              <strong id="teamCodeDisplay">-</strong>
+            <div class="team-share-box">
+              <button class="secondary-button" type="button" id="makeShareUrlButton">공유 URL 만들기</button>
+              <div class="share-url-row" id="shareUrlBox" hidden>
+                <input id="shareUrlOutput" type="text" readonly aria-label="팀원 정보 공유 URL" />
+                <button class="secondary-button" type="button" id="copyShareUrlButton">공유 URL 복사</button>
+              </div>
+              <p class="helper-text" id="teamShareInfo">현재 팀 이름과 팀원 목록만 URL로 공유합니다.</p>
             </div>
           </aside>
 
           <form class="member-form" id="memberForm">
             <h3>팀원 추가</h3>
-            <label for="memberNameInput">이름</label>
-            <input id="memberNameInput" type="text" placeholder="예: 김민수" autocomplete="off" />
-            <label for="memberNumberInput">등번호</label>
-            <input id="memberNumberInput" type="text" placeholder="예: 10" autocomplete="off" />
-            <label for="memberPositionInput">주 포지션</label>
-            <input id="memberPositionInput" type="text" placeholder="예: ST, CM, GK" autocomplete="off" />
-            <button type="submit">팀원 추가</button>
+            <div class="member-form-fields">
+              <label for="memberNameInput">
+                이름
+                <input id="memberNameInput" type="text" placeholder="예: 김민수" autocomplete="off" />
+              </label>
+              <label for="memberNumberInput">
+                등번호
+                <input id="memberNumberInput" type="text" placeholder="예: 10" autocomplete="off" />
+              </label>
+            </div>
+            <button class="member-submit" type="submit">등록하기</button>
           </form>
         </div>
 
