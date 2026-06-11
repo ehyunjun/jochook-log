@@ -575,13 +575,15 @@ main {
   display: grid;
   grid-template-columns: minmax(0, 3fr) minmax(230px, 1fr);
   gap: 16px;
-  align-items: stretch;
+  align-items: start;
 }
 
 .field-panel {
   display: grid;
+  align-self: start;
   gap: 8px;
   min-width: 0;
+  width: 100%;
 }
 
 .board-header {
@@ -596,15 +598,20 @@ main {
 }
 
 .field-wrap {
-  overflow-x: auto;
+  width: 100%;
+  overflow: hidden;
   border-radius: var(--radius);
   box-shadow: var(--shadow);
 }
 
 .squad-board {
   position: relative;
-  min-width: 780px;
-  height: 700px;
+  width: 100%;
+  max-width: 900px;
+  min-width: 0;
+  height: auto;
+  aspect-ratio: 4 / 3;
+  margin: 0 auto;
   overflow: hidden;
   border: 4px solid rgba(255, 255, 255, 0.9);
   border-radius: var(--radius);
@@ -725,7 +732,7 @@ main {
 .slot-player strong {
   overflow: hidden;
   color: var(--ink);
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -812,6 +819,23 @@ main {
   align-items: center;
 }
 
+.selected-player-hint {
+  display: grid;
+  gap: 3px;
+  border: 1px solid rgba(243, 177, 63, 0.55);
+  border-radius: var(--radius);
+  background: #fff8e8;
+  color: var(--green-dark);
+  padding: 10px;
+  font-size: 0.86rem;
+  line-height: 1.35;
+}
+
+.selected-player-hint span {
+  color: var(--muted);
+  font-weight: 800;
+}
+
 .player-pool-list {
   display: grid;
   gap: 10px;
@@ -843,6 +867,12 @@ main {
   background: var(--surface-strong);
   box-shadow: 0 8px 18px rgba(20, 122, 61, 0.14);
   transform: translateY(-1px);
+}
+
+.player-pool-card.selected {
+  border-color: var(--accent);
+  background: #fff8e8;
+  box-shadow: 0 0 0 3px rgba(243, 177, 63, 0.22), 0 10px 22px rgba(20, 122, 61, 0.14);
 }
 
 .player-pool-card.dragging {
@@ -1028,6 +1058,16 @@ main {
   line-height: 1.5;
 }
 
+@media (max-width: 1024px) {
+  .formation-workspace {
+    grid-template-columns: 1fr;
+  }
+
+  .squad-board {
+    max-width: 100%;
+  }
+}
+
 @media (max-width: 900px) {
   .start-layout,
   .team-shell,
@@ -1092,13 +1132,83 @@ main {
     grid-template-columns: 1fr;
   }
 
+  .field-wrap {
+    overflow: hidden;
+  }
+
   .squad-board {
-    min-width: 700px;
-    height: 660px;
+    width: 100%;
+    max-width: 100%;
+    min-width: 0;
+    min-height: 560px;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    border-width: 3px;
   }
 
   .position-slot {
-    width: 92px;
+    width: clamp(54px, 14vw, 72px);
+    min-height: clamp(72px, 18vw, 88px);
+    gap: 4px;
+    border: 0;
+    background: transparent;
+    box-shadow: none;
+    padding: 0;
+  }
+
+  .position-slot.drag-over {
+    background: transparent;
+    box-shadow: none;
+    transform: translate(-50%, -50%) scale(1.04);
+  }
+
+  .position-slot.drag-over .slot-label {
+    box-shadow: 0 0 0 4px rgba(243, 177, 63, 0.36), 0 8px 18px rgba(0, 0, 0, 0.2);
+  }
+
+  .slot-label {
+    display: grid;
+    width: clamp(36px, 10vw, 46px);
+    height: clamp(36px, 10vw, 46px);
+    place-items: center;
+    border: 1px solid rgba(255, 255, 255, 0.75);
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.94);
+    box-shadow: 0 8px 18px rgba(0, 0, 0, 0.18);
+    font-size: clamp(0.62rem, 2.4vw, 0.76rem);
+    margin: 0 auto;
+  }
+
+  .slot-player,
+  .slot-player.empty {
+    min-height: 0;
+    background: transparent;
+    padding: 0;
+  }
+
+  .slot-player strong {
+    max-width: 84px;
+    color: #fff;
+    font-size: clamp(0.75rem, 3vw, 0.95rem);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.55);
+  }
+
+  .slot-note {
+    max-width: 88px;
+    color: #f7fff7;
+    font-size: clamp(0.58rem, 2.2vw, 0.68rem);
+    text-shadow: 0 1px 4px rgba(0, 0, 0, 0.48);
+    -webkit-line-clamp: 1;
+  }
+
+  .slot-note-button {
+    position: absolute;
+    top: -7px;
+    right: -2px;
+    width: 22px;
+    height: 22px;
+    min-height: 22px;
+    font-size: 0.95rem;
   }
 
   .primary-save {

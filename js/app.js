@@ -102,6 +102,7 @@ const dom = {
 
 let state = loadState();
 let selectedMemberId = null;
+let selectedPoolPlayerId = null;
 let activeMemoSlotId = null;
 let recordDraft = {
   participants: new Set(),
@@ -478,9 +479,17 @@ function renderPlayerPool() {
   );
   const players = getFormationPlayers();
   const unplacedPlayers = players.filter((player) => !placedIds.has(player.id));
+  const selectedPlayer = unplacedPlayers.find((player) => player.id === selectedPoolPlayerId);
+  if (!selectedPlayer) {
+    selectedPoolPlayerId = null;
+  }
+  const selectedHint = selectedPlayer
+    ? `<p class="selected-player-hint"><strong>선택된 선수: ${escapeHtml(selectedPlayer.name)}</strong><span>배치할 포지션을 눌러주세요.</span></p>`
+    : "";
   const playerListMarkup = unplacedPlayers.length
     ? unplacedPlayers
         .map((player) => {
+          const selectedClass = player.id === selectedPoolPlayerId ? " selected" : "";
           const guestActions = player.isGuest
             ? `
               <div class="guest-actions">
@@ -490,7 +499,7 @@ function renderPlayerPool() {
             `
             : "";
           return `
-            <article class="player-pool-card${player.isGuest ? " guest-card" : ""}" draggable="true" data-drag-player-id="${player.id}">
+            <article class="player-pool-card${player.isGuest ? " guest-card" : ""}${selectedClass}" draggable="true" data-drag-player-id="${player.id}" tabindex="0">
               <div class="player-pool-name">
                 <span>${escapeHtml(player.name)}</span>
               </div>
@@ -500,12 +509,13 @@ function renderPlayerPool() {
           `;
         })
         .join("")
-    : `<p class="empty-text">${players.length ? "모든 출전 선수가 배치되었습니다." : "경기 준비에서 출전 선수를 선택해 주세요."}</p>`;
+    : `<p class="empty-text">${players.length ? "모든 후보선수가 배치되었습니다." : "경기 준비에서 출전 선수를 선택해 주세요."}</p>`;
 
   dom.playerPoolPanel.innerHTML = `
     <div class="player-pool-header">
-      <h3>출전 선수</h3>
+      <h3>후보선수</h3>
     </div>
+    ${selectedHint}
     <div class="player-pool-list">
       ${playerListMarkup}
     </div>
@@ -1149,13 +1159,27 @@ function bindEvents() {
     const deleteButton = event.target.closest("[data-delete-guest]");
     if (deleteButton) {
       deleteGuest(deleteButton.dataset.deleteGuest);
+      return;
     }
+
+    const card = event.target.closest("[data-drag-player-id]");
+    if (!card) return;
+    selectedPoolPlayerId = selectedPoolPlayerId === card.dataset.dragPlayerId ? null : card.dataset.dragPlayerId;
+    renderFormation();
   });
 
   dom.squadBoard.addEventListener("click", (event) => {
     const button = event.target.closest("[data-slot-note-open]");
-    if (!button) return;
-    openMemoModal(button.dataset.slotNoteOpen);
+    if (button) {
+      openMemoModal(button.dataset.slotNoteOpen);
+      return;
+    }
+
+    const slot = event.target.closest("[data-slot-id]");
+    if (!slot || !selectedPoolPlayerId) return;
+    const playerId = selectedPoolPlayerId;
+    selectedPoolPlayerId = null;
+    placePlayerInSlot(slot.dataset.slotId, playerId);
   });
 
   dom.copyImageButton.addEventListener("click", copyFormationImage);
