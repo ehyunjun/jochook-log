@@ -925,20 +925,21 @@ function saveFormationMatch() {
   }));
   const title = formatMatchTitle(date, opponent);
   const now = new Date().toISOString();
-  const existingMatch = state.matches.find((match) => match.id === matchInfo.savedMatchId);
+  const savedMatch = state.matches.find((match) => match.id === matchInfo.savedMatchId);
+  const shouldUpdateSavedMatch = savedMatch && savedMatch.date === date && getMatchOpponent(savedMatch) === opponent;
 
-  if (existingMatch) {
-    existingMatch.title = title;
-    existingMatch.date = date;
-    existingMatch.opponent = opponent;
-    existingMatch.memo = "";
-    existingMatch.participants = participants;
-    existingMatch.guests = guests;
-    existingMatch.goals = (existingMatch.goals || []).filter((event) => participantIds.has(event.playerId));
-    existingMatch.assists = (existingMatch.assists || []).filter((event) => participantIds.has(event.playerId));
-    existingMatch.updatedAt = now;
-    if (selectedRecordMatchId === existingMatch.id) {
-      loadMatchForRecord(existingMatch.id);
+  if (shouldUpdateSavedMatch) {
+    savedMatch.title = title;
+    savedMatch.date = date;
+    savedMatch.opponent = opponent;
+    savedMatch.memo = opponent;
+    savedMatch.participants = participants;
+    savedMatch.guests = guests;
+    savedMatch.goals = (savedMatch.goals || []).filter((event) => participantIds.has(event.playerId));
+    savedMatch.assists = (savedMatch.assists || []).filter((event) => participantIds.has(event.playerId));
+    savedMatch.updatedAt = now;
+    if (selectedRecordMatchId === savedMatch.id) {
+      loadMatchForRecord(savedMatch.id);
     }
     saveState();
     renderAll();
@@ -951,7 +952,7 @@ function saveFormationMatch() {
     title,
     date,
     opponent,
-    memo: "",
+    memo: opponent,
     participants,
     goals: [],
     assists: [],
@@ -1180,12 +1181,16 @@ function bindEvents() {
   });
 
   dom.prepDateInput.addEventListener("input", () => {
-    getMatchInfo().date = dom.prepDateInput.value;
+    const matchInfo = getMatchInfo();
+    matchInfo.date = dom.prepDateInput.value;
+    matchInfo.savedMatchId = "";
     saveState();
   });
 
   dom.prepOpponentInput.addEventListener("input", () => {
-    getMatchInfo().opponent = dom.prepOpponentInput.value.trim();
+    const matchInfo = getMatchInfo();
+    matchInfo.opponent = dom.prepOpponentInput.value.trim();
+    matchInfo.savedMatchId = "";
     saveState();
   });
 

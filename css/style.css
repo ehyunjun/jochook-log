@@ -846,8 +846,8 @@ main {
 
 @media (min-width: 901px) {
   .position-slot {
-    width: 106px;
-    min-height: 70px;
+    width: 126px;
+    min-height: 72px;
     padding: 8px 28px 8px 8px;
   }
 
@@ -860,7 +860,14 @@ main {
   }
 
   .slot-player strong {
+    display: block;
+    overflow: visible;
     font-size: 1.2rem;
+    line-height: 1.15;
+    text-overflow: clip;
+    white-space: normal;
+    word-break: keep-all;
+    -webkit-line-clamp: unset;
   }
 
   .slot-note {
