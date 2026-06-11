@@ -457,7 +457,7 @@ function renderSquadBoard() {
         const noteClass = savedSlot.note ? " has-note" : "";
         const draggable = player ? `draggable="true" data-slot-player-id="${player.id}"` : "";
         return `
-          <div class="position-slot" data-slot-id="${slot.id}" ${draggable} style="--x:${slot.x}%; --y:${slot.y}%;">
+          <div class="position-slot" data-slot-id="${slot.id}" ${draggable} tabindex="0" style="--x:${slot.x}%; --y:${slot.y}%;">
             <div class="slot-label">${slot.label}</div>
             <div class="slot-player${emptyClass}">
               <strong>${escapeHtml(playerName)}</strong>
@@ -720,14 +720,17 @@ function clearSlotPlayer(slotId) {
 
 function movePlayerBetweenSlots(sourceSlotId, targetSlotId) {
   const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
-  const playerId = quarterData.slots[sourceSlotId]?.playerId;
-  if (!playerId || sourceSlotId === targetSlotId) return;
-  quarterData.slots[targetSlotId] = { ...(quarterData.slots[targetSlotId] || {}), playerId };
-  quarterData.slots[sourceSlotId] = { ...(quarterData.slots[sourceSlotId] || {}), playerId: "" };
+  const sourceSlot = quarterData.slots[sourceSlotId] || {};
+  const targetSlot = quarterData.slots[targetSlotId] || {};
+  const sourcePlayerId = sourceSlot.playerId;
+  const targetPlayerId = targetSlot.playerId || "";
+  if (!sourcePlayerId || sourceSlotId === targetSlotId) return;
+  quarterData.slots[targetSlotId] = { ...targetSlot, playerId: sourcePlayerId };
+  quarterData.slots[sourceSlotId] = { ...sourceSlot, playerId: targetPlayerId };
   state.formation.squads[state.formation.activeQuarter] = quarterData;
   saveState();
   renderFormation();
-  setFormationNotice(`${getPlayerName(playerId)} 선수를 이동했습니다.`);
+  setFormationNotice(targetPlayerId ? "선수 위치를 교체했습니다." : `${getPlayerName(sourcePlayerId)} 선수를 이동했습니다.`);
 }
 
 function placePlayerInSlot(slotId, playerId) {
@@ -752,6 +755,24 @@ function getDuplicateSlotLabels(memberId, nextSlotId) {
 
 function clearDragOverSlots() {
   $$(".position-slot.drag-over").forEach((slot) => slot.classList.remove("drag-over"));
+}
+
+function setDragPayload(event, payload) {
+  const serialized = JSON.stringify(payload);
+  event.dataTransfer.setData("application/json", serialized);
+  event.dataTransfer.setData("text/plain", payload.playerId || "");
+  if (payload.type === "board-player") {
+    event.dataTransfer.setData("application/x-jochook-board-player", payload.fromSlotId);
+  }
+}
+
+function getDragPayload(event) {
+  try {
+    const rawPayload = event.dataTransfer.getData("application/json");
+    return rawPayload ? JSON.parse(rawPayload) : null;
+  } catch {
+    return null;
+  }
 }
 
 function setFormationNotice(message, isWarning = false) {
@@ -1031,7 +1052,7 @@ function bindEvents() {
     const slot = event.target.closest("[data-slot-id]");
     if (!slot) return;
     event.preventDefault();
-    event.dataTransfer.dropEffect = "copy";
+    event.dataTransfer.dropEffect = Array.from(event.dataTransfer.types).includes("application/x-jochook-board-player") ? "move" : "copy";
     slot.classList.add("drag-over");
   });
 
@@ -1045,21 +1066,25 @@ function bindEvents() {
     const slot = event.target.closest("[data-slot-id]");
     if (!slot) return;
     event.preventDefault();
-    const sourceSlotId = event.dataTransfer.getData("application/x-jochook-slot-id");
-    const playerId = event.dataTransfer.getData("text/plain");
+    const payload = getDragPayload(event);
     clearDragOverSlots();
-    if (sourceSlotId) {
-      movePlayerBetweenSlots(sourceSlotId, slot.dataset.slotId);
+    if (payload?.type === "board-player") {
+      movePlayerBetweenSlots(payload.fromSlotId, slot.dataset.slotId);
       return;
     }
-    placePlayerInSlot(slot.dataset.slotId, playerId);
+    if (payload?.type === "pool-player") {
+      placePlayerInSlot(slot.dataset.slotId, payload.playerId);
+    }
   });
 
   dom.squadBoard.addEventListener("dragstart", (event) => {
     const slot = event.target.closest("[data-slot-id]");
     if (!slot?.dataset.slotPlayerId) return;
-    event.dataTransfer.setData("application/x-jochook-slot-id", slot.dataset.slotId);
-    event.dataTransfer.setData("text/plain", slot.dataset.slotPlayerId);
+    setDragPayload(event, {
+      type: "board-player",
+      playerId: slot.dataset.slotPlayerId,
+      fromSlotId: slot.dataset.slotId,
+    });
     event.dataTransfer.effectAllowed = "move";
     slot.classList.add("dragging");
   });
@@ -1074,7 +1099,10 @@ function bindEvents() {
   dom.playerPoolPanel.addEventListener("dragstart", (event) => {
     const card = event.target.closest("[data-drag-player-id]");
     if (!card) return;
-    event.dataTransfer.setData("text/plain", card.dataset.dragPlayerId);
+    setDragPayload(event, {
+      type: "pool-player",
+      playerId: card.dataset.dragPlayerId,
+    });
     event.dataTransfer.effectAllowed = "copy";
     card.classList.add("dragging");
   });
@@ -1086,7 +1114,7 @@ function bindEvents() {
   });
 
   dom.playerPoolPanel.addEventListener("dragover", (event) => {
-    if (!Array.from(event.dataTransfer.types).includes("application/x-jochook-slot-id")) return;
+    if (!Array.from(event.dataTransfer.types).includes("application/x-jochook-board-player")) return;
     event.preventDefault();
     event.dataTransfer.dropEffect = "move";
     dom.playerPoolPanel.classList.add("drop-over");
@@ -1098,11 +1126,11 @@ function bindEvents() {
   });
 
   dom.playerPoolPanel.addEventListener("drop", (event) => {
-    const sourceSlotId = event.dataTransfer.getData("application/x-jochook-slot-id");
-    if (!sourceSlotId) return;
+    const payload = getDragPayload(event);
+    if (payload?.type !== "board-player") return;
     event.preventDefault();
     dom.playerPoolPanel.classList.remove("drop-over");
-    clearSlotPlayer(sourceSlotId);
+    clearSlotPlayer(payload.fromSlotId);
   });
 
   dom.playerPoolPanel.addEventListener("click", (event) => {

@@ -763,16 +763,15 @@ main {
   pointer-events: none;
 }
 
-.slot-note-button:hover,
-.slot-note-button.has-note {
+.slot-note-button:hover {
   border-color: var(--accent);
   background: var(--accent);
   color: #fff;
 }
 
 .position-slot:hover .slot-note-button,
-.position-slot:focus-within .slot-note-button,
-.slot-note-button.has-note {
+.position-slot:focus .slot-note-button,
+.position-slot:focus-within .slot-note-button {
   opacity: 1;
   pointer-events: auto;
 }
@@ -1108,11 +1107,6 @@ main {
 }
 
 @media (hover: none) {
-  .slot-note-button {
-    opacity: 1;
-    pointer-events: auto;
-  }
-
   .guest-actions {
     opacity: 1;
     pointer-events: auto;
