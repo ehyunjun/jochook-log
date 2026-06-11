@@ -112,7 +112,6 @@
         <section class="match-prep-card" aria-labelledby="match-prep-title">
           <div class="match-prep-heading">
             <h3 id="match-prep-title">경기 준비</h3>
-            <button class="secondary-button" type="button" id="addGuestButton">용병 추가</button>
           </div>
           <div class="match-prep-grid">
             <label>
@@ -164,8 +163,11 @@
         <p class="helper-text formation-notice" id="formationNotice"></p>
 
         <div id="formationCaptureArea" class="formation-workspace">
-          <div class="field-wrap">
-            <div class="squad-board" id="squadBoard" aria-label="축구장 스쿼드판"></div>
+          <div class="field-panel">
+            <div class="board-header" id="formationBoardHeader"></div>
+            <div class="field-wrap">
+              <div class="squad-board" id="squadBoard" aria-label="축구장 스쿼드판"></div>
+            </div>
           </div>
 
           <aside class="player-pool-panel" id="playerPoolPanel" aria-label="선수 목록"></aside>

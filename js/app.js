@@ -69,12 +69,12 @@ const dom = {
   prepOpponentInput: $("#prepOpponentInput"),
   prepTitleInput: $("#prepTitleInput"),
   formationParticipantList: $("#formationParticipantList"),
-  addGuestButton: $("#addGuestButton"),
   quarterCountSelect: $("#quarterCountSelect"),
   formationSelect: $("#formationSelect"),
   quarterTabs: $("#quarterTabs"),
   formationNotice: $("#formationNotice"),
   formationCaptureArea: $("#formationCaptureArea"),
+  formationBoardHeader: $("#formationBoardHeader"),
   squadBoard: $("#squadBoard"),
   playerPoolPanel: $("#playerPoolPanel"),
   copyImageButton: $("#copyImageButton"),
@@ -176,6 +176,10 @@ function uid(prefix) {
   return `${prefix}-${Date.now()}-${Math.random().toString(16).slice(2)}`;
 }
 
+function sortByName(players) {
+  return [...players].sort((a, b) => a.name.localeCompare(b.name, "ko-KR"));
+}
+
 function clamp(value, min, max) {
   return Math.min(Math.max(value, min), max);
 }
@@ -235,11 +239,11 @@ function getFormationPlayers() {
     position: "용병",
     isGuest: true,
   }));
-  return [...selectedMembers, ...guests];
+  return sortByName([...selectedMembers, ...guests]);
 }
 
 function getRecordPlayers() {
-  return [
+  return sortByName([
     ...state.members.map((member) => ({ ...member, isGuest: false })),
     ...getMatchInfo().guests.map((guest) => ({
       ...guest,
@@ -247,7 +251,7 @@ function getRecordPlayers() {
       position: "용병",
       isGuest: true,
     })),
-  ];
+  ]);
 }
 
 function countByPlayer(events) {
@@ -294,7 +298,7 @@ function renderTeam() {
   if (!state.members.length) {
     dom.membersGrid.innerHTML = `<p class="empty-text">아직 등록된 팀원이 없습니다.</p>`;
   } else {
-    dom.membersGrid.innerHTML = state.members
+    dom.membersGrid.innerHTML = sortByName(state.members)
       .map((member) => {
         const stats = getMemberStats(member.id);
         const selectedClass = selectedMemberId === member.id ? " active" : "";
@@ -386,7 +390,7 @@ function renderMatchPrep() {
   dom.prepTitleInput.value = matchInfo.title || "";
 
   dom.formationParticipantList.innerHTML = state.members.length
-    ? state.members
+    ? sortByName(state.members)
         .map(
           (member) => `
             <label class="prep-check">
@@ -411,8 +415,14 @@ function renderFormation() {
   const addButtonDisabled = state.formation.quarters >= MAX_QUARTERS ? "disabled" : "";
   dom.quarterTabs.innerHTML = `${quarterButtons}<button class="add-quarter-button" type="button" data-add-quarter ${addButtonDisabled} aria-label="쿼터 추가">+</button>`;
 
+  renderBoardHeader();
   renderSquadBoard();
   renderPlayerPool();
+}
+
+function renderBoardHeader() {
+  const teamName = state.team.name || "나의 팀";
+  dom.formationBoardHeader.textContent = `${teamName} · ${state.formation.activeQuarter}쿼터 · ${state.formation.shape} 포메이션`;
 }
 
 function renderSquadBoard() {
@@ -434,16 +444,16 @@ function renderSquadBoard() {
         const savedSlot = quarterData.slots[slot.id] || {};
         const player = getPlayerById(savedSlot.playerId);
         const playerName = player ? player.name : "-";
-        const playerMeta = player ? `#${player.number || "-"}` : "";
         const emptyClass = player ? "" : " empty";
         const noteTitle = savedSlot.note ? `메모: ${savedSlot.note}` : "메모";
         const noteClass = savedSlot.note ? " has-note" : "";
+        const draggable = player ? `draggable="true" data-slot-player-id="${player.id}"` : "";
         return `
-          <div class="position-slot" data-slot-id="${slot.id}" style="--x:${slot.x}%; --y:${slot.y}%;">
+          <div class="position-slot" data-slot-id="${slot.id}" ${draggable} style="--x:${slot.x}%; --y:${slot.y}%;">
             <div class="slot-label">${slot.label}</div>
             <div class="slot-player${emptyClass}">
               <strong>${escapeHtml(playerName)}</strong>
-              ${playerMeta ? `<span>${escapeHtml(playerMeta)}</span>` : ""}
+              ${savedSlot.note ? `<span class="slot-note">${escapeHtml(savedSlot.note)}</span>` : ""}
             </div>
             <button class="slot-note-button${noteClass}" type="button" data-slot-note-open="${slot.id}" title="${escapeHtml(noteTitle)}" aria-label="${slot.label} 메모">+</button>
           </div>
@@ -453,40 +463,45 @@ function renderSquadBoard() {
 }
 
 function renderPlayerPool() {
-  const players = getFormationPlayers();
-  if (!players.length) {
-    dom.playerPoolPanel.innerHTML = `
-      <h3>출전 선수</h3>
-      <p class="empty-text">경기 준비에서 출전 선수를 선택해 주세요.</p>
-    `;
-    return;
-  }
-
   const placedIds = new Set(
     Object.values(state.formation.squads[state.formation.activeQuarter]?.slots || {})
       .map((slot) => slot.playerId)
       .filter(Boolean),
   );
+  const players = getFormationPlayers();
+  const unplacedPlayers = players.filter((player) => !placedIds.has(player.id));
+  const playerListMarkup = unplacedPlayers.length
+    ? unplacedPlayers
+        .map((player) => {
+          const guestActions = player.isGuest
+            ? `
+              <div class="guest-actions">
+                <button class="secondary-button" type="button" data-edit-guest="${player.id}">수정</button>
+                <button class="delete-guest-button" type="button" data-delete-guest="${player.id}">삭제</button>
+              </div>
+            `
+            : "";
+          return `
+            <article class="player-pool-card" draggable="true" data-drag-player-id="${player.id}">
+              <div class="player-pool-name">
+                <span>${escapeHtml(player.name)}</span>
+              </div>
+              <div class="player-pool-meta">${player.isGuest ? "용병" : `#${escapeHtml(player.number || "-")} · ${escapeHtml(player.position || "포지션 미정")}`}</div>
+              ${guestActions}
+            </article>
+          `;
+        })
+        .join("")
+    : `<p class="empty-text">${players.length ? "모든 출전 선수가 배치되었습니다." : "경기 준비에서 출전 선수를 선택해 주세요."}</p>`;
 
   dom.playerPoolPanel.innerHTML = `
     <div class="player-pool-header">
       <h3>출전 선수</h3>
     </div>
     <div class="player-pool-list">
-      ${players
-        .map((player) => {
-          const placedClass = placedIds.has(player.id) ? " placed" : "";
-          return `
-            <article class="player-pool-card${placedClass}" draggable="true" data-drag-player-id="${player.id}">
-              <div class="player-pool-name">
-                <span>${escapeHtml(player.name)}</span>
-              </div>
-              <div class="player-pool-meta">${player.isGuest ? "용병" : `#${escapeHtml(player.number || "-")} · ${escapeHtml(player.position || "포지션 미정")}`}</div>
-            </article>
-          `;
-        })
-        .join("")}
+      ${playerListMarkup}
     </div>
+    <button class="secondary-button add-guest-panel-button" type="button" data-add-guest>용병 추가</button>
   `;
 }
 
@@ -630,11 +645,48 @@ function addGuest() {
   setFormationNotice(`용병${nextNumber} 선수를 추가했습니다.`);
 }
 
+function editGuest(guestId) {
+  const guest = getGuestById(guestId);
+  if (!guest) return;
+  const nextName = prompt("용병 이름을 입력해 주세요.", guest.name);
+  if (nextName === null) return;
+  const trimmedName = nextName.trim();
+  if (!trimmedName) return;
+  guest.name = trimmedName;
+  saveState();
+  renderAll();
+  setFormationNotice(`${trimmedName} 이름으로 변경했습니다.`);
+}
+
+function deleteGuest(guestId) {
+  const guest = getGuestById(guestId);
+  if (!guest) return;
+  const matchInfo = getMatchInfo();
+  matchInfo.guests = matchInfo.guests.filter((item) => item.id !== guestId);
+  removePlayerFromAllSlots(guestId);
+  recordDraft.participants.delete(guestId);
+  recordDraft.goals = recordDraft.goals.filter((event) => event.playerId !== guestId);
+  recordDraft.assists = recordDraft.assists.filter((event) => event.playerId !== guestId);
+  saveState();
+  renderAll();
+  setFormationNotice(`${guest.name} 선수를 삭제했습니다.`);
+}
+
 function cleanFormationSlotsForAvailablePlayers() {
   const availableIds = new Set(getFormationPlayers().map((player) => player.id));
   Object.values(state.formation.squads).forEach((quarterData) => {
     Object.values(quarterData.slots || {}).forEach((slot) => {
       if (slot.playerId && !availableIds.has(slot.playerId)) {
+        slot.playerId = "";
+      }
+    });
+  });
+}
+
+function removePlayerFromAllSlots(playerId) {
+  Object.values(state.formation.squads).forEach((quarterData) => {
+    Object.values(quarterData.slots || {}).forEach((slot) => {
+      if (slot.playerId === playerId) {
         slot.playerId = "";
       }
     });
@@ -647,6 +699,27 @@ function updateSquadSlot(slotId, patch) {
   quarterData.slots[slotId] = { ...(quarterData.slots[slotId] || {}), ...patch };
   state.formation.squads[quarter] = quarterData;
   saveState();
+}
+
+function clearSlotPlayer(slotId) {
+  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  const playerId = quarterData.slots[slotId]?.playerId;
+  if (!playerId) return;
+  updateSquadSlot(slotId, { playerId: "" });
+  renderFormation();
+  setFormationNotice(`${getPlayerName(playerId)} 선수를 출전 선수 목록으로 되돌렸습니다.`);
+}
+
+function movePlayerBetweenSlots(sourceSlotId, targetSlotId) {
+  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  const playerId = quarterData.slots[sourceSlotId]?.playerId;
+  if (!playerId || sourceSlotId === targetSlotId) return;
+  quarterData.slots[targetSlotId] = { ...(quarterData.slots[targetSlotId] || {}), playerId };
+  quarterData.slots[sourceSlotId] = { ...(quarterData.slots[sourceSlotId] || {}), playerId: "" };
+  state.formation.squads[state.formation.activeQuarter] = quarterData;
+  saveState();
+  renderFormation();
+  setFormationNotice(`${getPlayerName(playerId)} 선수를 이동했습니다.`);
 }
 
 function placePlayerInSlot(slotId, playerId) {
@@ -905,8 +978,6 @@ function bindEvents() {
     renderAll();
   });
 
-  dom.addGuestButton.addEventListener("click", addGuest);
-
   dom.quarterCountSelect.addEventListener("change", () => {
     state.formation.quarters = clamp(Number(dom.quarterCountSelect.value), 1, MAX_QUARTERS);
     state.formation.activeQuarter = clamp(state.formation.activeQuarter, 1, state.formation.quarters);
@@ -959,9 +1030,30 @@ function bindEvents() {
     const slot = event.target.closest("[data-slot-id]");
     if (!slot) return;
     event.preventDefault();
+    const sourceSlotId = event.dataTransfer.getData("application/x-jochook-slot-id");
     const playerId = event.dataTransfer.getData("text/plain");
     clearDragOverSlots();
+    if (sourceSlotId) {
+      movePlayerBetweenSlots(sourceSlotId, slot.dataset.slotId);
+      return;
+    }
     placePlayerInSlot(slot.dataset.slotId, playerId);
+  });
+
+  dom.squadBoard.addEventListener("dragstart", (event) => {
+    const slot = event.target.closest("[data-slot-id]");
+    if (!slot?.dataset.slotPlayerId) return;
+    event.dataTransfer.setData("application/x-jochook-slot-id", slot.dataset.slotId);
+    event.dataTransfer.setData("text/plain", slot.dataset.slotPlayerId);
+    event.dataTransfer.effectAllowed = "move";
+    slot.classList.add("dragging");
+  });
+
+  dom.squadBoard.addEventListener("dragend", (event) => {
+    const slot = event.target.closest("[data-slot-id]");
+    if (slot) slot.classList.remove("dragging");
+    clearDragOverSlots();
+    dom.playerPoolPanel.classList.remove("drop-over");
   });
 
   dom.playerPoolPanel.addEventListener("dragstart", (event) => {
@@ -976,6 +1068,45 @@ function bindEvents() {
     const card = event.target.closest("[data-drag-player-id]");
     if (card) card.classList.remove("dragging");
     clearDragOverSlots();
+  });
+
+  dom.playerPoolPanel.addEventListener("dragover", (event) => {
+    if (!Array.from(event.dataTransfer.types).includes("application/x-jochook-slot-id")) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "move";
+    dom.playerPoolPanel.classList.add("drop-over");
+  });
+
+  dom.playerPoolPanel.addEventListener("dragleave", (event) => {
+    if (dom.playerPoolPanel.contains(event.relatedTarget)) return;
+    dom.playerPoolPanel.classList.remove("drop-over");
+  });
+
+  dom.playerPoolPanel.addEventListener("drop", (event) => {
+    const sourceSlotId = event.dataTransfer.getData("application/x-jochook-slot-id");
+    if (!sourceSlotId) return;
+    event.preventDefault();
+    dom.playerPoolPanel.classList.remove("drop-over");
+    clearSlotPlayer(sourceSlotId);
+  });
+
+  dom.playerPoolPanel.addEventListener("click", (event) => {
+    const addButton = event.target.closest("[data-add-guest]");
+    if (addButton) {
+      addGuest();
+      return;
+    }
+
+    const editButton = event.target.closest("[data-edit-guest]");
+    if (editButton) {
+      editGuest(editButton.dataset.editGuest);
+      return;
+    }
+
+    const deleteButton = event.target.closest("[data-delete-guest]");
+    if (deleteButton) {
+      deleteGuest(deleteButton.dataset.deleteGuest);
+    }
   });
 
   dom.squadBoard.addEventListener("click", (event) => {
