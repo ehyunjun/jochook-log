@@ -121,10 +121,6 @@
                 상대팀
                 <input id="prepOpponentInput" type="text" placeholder="예: 부산FC" autocomplete="off" />
               </label>
-              <label>
-                경기 메모 또는 경기명
-                <input id="prepTitleInput" type="text" placeholder="예: 6월 16일 자체전" autocomplete="off" />
-              </label>
             </div>
             <div>
               <h4 class="sub-title">출전 선수 선택</h4>
@@ -164,6 +160,7 @@
 
         <div class="formation-toolbar" aria-label="포메이션 작업">
           <button class="secondary-button" type="button" id="copyImageButton">이미지 복사</button>
+          <button type="button" id="saveFormationMatchButton">저장하기</button>
           <button class="danger-soft-button" type="button" id="resetFormationButton">초기화</button>
         </div>
 
@@ -198,25 +195,18 @@
           </div>
         </div>
 
-        <form class="record-form" id="recordForm">
-          <div class="form-grid">
-            <label>
-              경기명
-              <input id="matchTitleInput" type="text" placeholder="예: 6월 16일 자체전" />
-            </label>
-            <label>
-              경기 날짜
-              <input id="matchDateInput" type="date" />
-            </label>
-            <label>
-              상대팀 또는 메모
-              <input id="matchMemoInput" type="text" placeholder="예: 부산FC / 자체전 메모" />
-            </label>
-          </div>
+        <div class="matches-section">
+          <h3 class="block-title">저장된 경기 기록</h3>
+          <div class="match-list" id="matchList"></div>
+        </div>
 
+        <form class="record-form" id="recordForm">
+          <div class="record-selected-match" id="recordSelectedMatchInfo">
+            <p class="empty-text">기록을 입력할 경기를 선택해 주세요.</p>
+          </div>
           <div class="record-columns">
             <div>
-              <h3>출전 선수 선택</h3>
+              <h3>출전 선수</h3>
               <div class="checkbox-list" id="appearanceList"></div>
             </div>
             <div class="event-box">
@@ -239,11 +229,6 @@
 
           <button class="primary-save" type="submit">기록 저장</button>
         </form>
-
-        <div class="matches-section">
-          <h3 class="block-title">저장된 경기 기록</h3>
-          <div class="match-list" id="matchList"></div>
-        </div>
       </section>
     </main>
 
