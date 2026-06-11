@@ -789,6 +789,30 @@ main {
   opacity: 0.65;
 }
 
+@media (min-width: 901px) {
+  .position-slot {
+    width: 106px;
+    min-height: 70px;
+    padding: 8px 28px 8px 8px;
+  }
+
+  .slot-label {
+    font-size: 0.86rem;
+  }
+
+  .slot-player {
+    padding: 6px;
+  }
+
+  .slot-player strong {
+    font-size: 1.2rem;
+  }
+
+  .slot-note {
+    font-size: 0.72rem;
+  }
+}
+
 .player-pool-panel {
   display: grid;
   align-content: start;
