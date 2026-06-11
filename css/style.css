@@ -101,8 +101,7 @@ main {
 }
 
 .app-header {
-  position: sticky;
-  top: 0;
+  position: static;
   z-index: 20;
   display: grid;
   gap: 18px;
@@ -1480,4 +1479,10 @@ main {
     min-height: 28px;
     padding: 0 8px;
   }
+}
+
+.squad-board,
+.position-slot,
+.player-pool-card {
+  touch-action: manipulation;
 }

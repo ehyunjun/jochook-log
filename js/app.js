@@ -1277,19 +1277,27 @@ function bindEvents() {
     renderFormation();
   });
 
-  dom.squadBoard.addEventListener("click", (event) => {
+  function handleSquadBoardTap(event) {
     const button = event.target.closest("[data-slot-note-open]");
     if (button) {
+      event.preventDefault();
       openMemoModal(button.dataset.slotNoteOpen);
       return;
     }
 
     const slot = event.target.closest("[data-slot-id]");
     if (!slot || !selectedPoolPlayerId) return;
+
+    event.preventDefault();
+
     const playerId = selectedPoolPlayerId;
     selectedPoolPlayerId = null;
     placePlayerInSlot(slot.dataset.slotId, playerId);
-  });
+  }
+
+  const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
+
+  dom.squadBoard.addEventListener(isTouchDevice ? "pointerup" : "click", handleSquadBoardTap);
 
   dom.copyImageButton.addEventListener("click", copyFormationImage);
   dom.resetFormationButton.addEventListener("click", resetCurrentQuarterFormation);
