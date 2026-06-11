@@ -308,13 +308,17 @@ function renderTeam() {
       .map((member) => {
         const stats = getMemberStats(member.id);
         const selectedClass = selectedMemberId === member.id ? " active" : "";
-        const badge = member.isMercenary ? `<span class="badge">일일 용병</span>` : `<span class="badge">${member.position || "포지션 미정"}</span>`;
+        const badge = member.isMercenary
+          ? `<span class="badge">일일 용병</span>`
+          : member.position
+            ? `<span class="badge">${escapeHtml(member.position)}</span>`
+            : "";
         return `
           <article class="member-card${selectedClass}" data-member-id="${member.id}">
             <div class="member-card-header">
               <div>
                 <div class="member-name">${escapeHtml(member.name)}</div>
-                <p class="helper-text">등번호 ${escapeHtml(member.number || "-")} · ${escapeHtml(member.position || "포지션 미정")}</p>
+                ${renderPlayerMeta(member)}
               </div>
               ${badge}
             </div>
@@ -335,6 +339,18 @@ function renderTeam() {
 
 function statPill(value, label) {
   return `<div class="stat-pill"><strong>${value}</strong><span>${label}</span></div>`;
+}
+
+function playerMetaText(player) {
+  const parts = [];
+  if (player.number) parts.push(`#${player.number}`);
+  if (player.position) parts.push(player.position);
+  return parts.join(" · ");
+}
+
+function renderPlayerMeta(player, prefix = "") {
+  const meta = playerMetaText(player);
+  return meta ? `<p class="helper-text">${prefix}${escapeHtml(meta)}</p>` : "";
 }
 
 function renderMemberDetail() {
@@ -362,7 +378,7 @@ function renderMemberDetail() {
 
   dom.memberDetail.innerHTML = `
     <h3>${escapeHtml(member.name)} 상세 기록</h3>
-    <p class="helper-text">등번호 ${escapeHtml(member.number || "-")} · ${escapeHtml(member.position || "포지션 미정")}</p>
+    ${renderPlayerMeta(member)}
     <div class="stat-row">
       ${statPill(stats.appearances, "총 출전")}
       ${statPill(stats.goals, "총 득점")}
@@ -487,6 +503,7 @@ function renderPlayerPool() {
     ? unplacedPlayers
         .map((player) => {
           const selectedClass = player.id === selectedPoolPlayerId ? " selected" : "";
+          const meta = player.isGuest ? "용병" : playerMetaText(player);
           const guestActions = player.isGuest
             ? `
               <div class="guest-actions">
@@ -500,7 +517,7 @@ function renderPlayerPool() {
               <div class="player-pool-name">
                 <span>${escapeHtml(player.name)}</span>
               </div>
-              <div class="player-pool-meta">${player.isGuest ? "용병" : `#${escapeHtml(player.number || "-")} · ${escapeHtml(player.position || "포지션 미정")}`}</div>
+              ${meta ? `<div class="player-pool-meta">${escapeHtml(meta)}</div>` : ""}
               ${guestActions}
             </article>
           `;
@@ -852,13 +869,15 @@ async function copyFormationImage() {
     return;
   }
 
+  const captureOptions = {
+    backgroundColor: "#f4f8f3",
+    scale: window.matchMedia("(max-width: 640px)").matches ? 1.5 : 2,
+    useCORS: true,
+  };
+
   try {
     setFormationNotice("포메이션 이미지를 만드는 중입니다.");
-    const canvas = await window.html2canvas(dom.formationCaptureArea, {
-      backgroundColor: "#f4f8f3",
-      scale: 2,
-      useCORS: true,
-    });
+    const canvas = await window.html2canvas(dom.formationCaptureArea, captureOptions);
     const blob = await canvasToBlob(canvas);
 
     if (navigator.clipboard?.write && "ClipboardItem" in window) {
@@ -871,11 +890,7 @@ async function copyFormationImage() {
     setFormationNotice("브라우저에서 이미지 복사를 지원하지 않아 파일로 저장합니다.", true);
   } catch {
     try {
-      const canvas = await window.html2canvas(dom.formationCaptureArea, {
-        backgroundColor: "#f4f8f3",
-        scale: 2,
-        useCORS: true,
-      });
+      const canvas = await window.html2canvas(dom.formationCaptureArea, captureOptions);
       const blob = await canvasToBlob(canvas);
       downloadBlob(blob);
       setFormationNotice("브라우저에서 이미지 복사를 지원하지 않아 파일로 저장합니다.", true);
