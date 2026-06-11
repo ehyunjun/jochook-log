@@ -5,43 +5,43 @@ const MAX_QUARTERS = 10;
 
 const FORMATIONS = {
   "4-4-2": [
-    { id: "gk", label: "GK", x: 50, y: 91 },
-    { id: "lb", label: "LB", x: 18, y: 72 },
-    { id: "lcb", label: "LCB", x: 39, y: 75 },
-    { id: "rcb", label: "RCB", x: 61, y: 75 },
-    { id: "rb", label: "RB", x: 82, y: 72 },
-    { id: "lm", label: "LM", x: 17, y: 49 },
-    { id: "lcm", label: "LCM", x: 39, y: 52 },
-    { id: "rcm", label: "RCM", x: 61, y: 52 },
-    { id: "rm", label: "RM", x: 83, y: 49 },
-    { id: "ls", label: "LS", x: 42, y: 25 },
-    { id: "rs", label: "RS", x: 58, y: 25 },
+    { id: "gk", label: "GK", x: 50, y: 92 },
+    { id: "lb", label: "LB", x: 15, y: 73 },
+    { id: "lcb", label: "LCB", x: 37, y: 76 },
+    { id: "rcb", label: "RCB", x: 63, y: 76 },
+    { id: "rb", label: "RB", x: 85, y: 73 },
+    { id: "lm", label: "LM", x: 15, y: 49 },
+    { id: "lcm", label: "LCM", x: 37, y: 53 },
+    { id: "rcm", label: "RCM", x: 63, y: 53 },
+    { id: "rm", label: "RM", x: 85, y: 49 },
+    { id: "ls", label: "LS", x: 39, y: 24 },
+    { id: "rs", label: "RS", x: 61, y: 24 },
   ],
   "4-3-3": [
-    { id: "gk", label: "GK", x: 50, y: 91 },
-    { id: "lb", label: "LB", x: 18, y: 72 },
-    { id: "lcb", label: "LCB", x: 39, y: 75 },
-    { id: "rcb", label: "RCB", x: 61, y: 75 },
-    { id: "rb", label: "RB", x: 82, y: 72 },
-    { id: "lcm", label: "LCM", x: 32, y: 50 },
-    { id: "cm", label: "CM", x: 50, y: 54 },
-    { id: "rcm", label: "RCM", x: 68, y: 50 },
-    { id: "lw", label: "LW", x: 22, y: 25 },
-    { id: "st", label: "ST", x: 50, y: 20 },
-    { id: "rw", label: "RW", x: 78, y: 25 },
+    { id: "gk", label: "GK", x: 50, y: 92 },
+    { id: "lb", label: "LB", x: 15, y: 73 },
+    { id: "lcb", label: "LCB", x: 37, y: 76 },
+    { id: "rcb", label: "RCB", x: 63, y: 76 },
+    { id: "rb", label: "RB", x: 85, y: 73 },
+    { id: "lcm", label: "LCM", x: 30, y: 52 },
+    { id: "cm", label: "CM", x: 50, y: 57 },
+    { id: "rcm", label: "RCM", x: 70, y: 52 },
+    { id: "lw", label: "LW", x: 20, y: 25 },
+    { id: "st", label: "ST", x: 50, y: 19 },
+    { id: "rw", label: "RW", x: 80, y: 25 },
   ],
   "4-2-3-1": [
-    { id: "gk", label: "GK", x: 50, y: 91 },
-    { id: "lb", label: "LB", x: 18, y: 72 },
-    { id: "lcb", label: "LCB", x: 39, y: 75 },
-    { id: "rcb", label: "RCB", x: 61, y: 75 },
-    { id: "rb", label: "RB", x: 82, y: 72 },
-    { id: "ldm", label: "LDM", x: 39, y: 58 },
-    { id: "rdm", label: "RDM", x: 61, y: 58 },
-    { id: "lw", label: "LW", x: 23, y: 39 },
+    { id: "gk", label: "GK", x: 50, y: 92 },
+    { id: "lb", label: "LB", x: 15, y: 73 },
+    { id: "lcb", label: "LCB", x: 37, y: 76 },
+    { id: "rcb", label: "RCB", x: 63, y: 76 },
+    { id: "rb", label: "RB", x: 85, y: 73 },
+    { id: "ldm", label: "LDM", x: 36, y: 59 },
+    { id: "rdm", label: "RDM", x: 64, y: 59 },
+    { id: "lw", label: "LW", x: 20, y: 40 },
     { id: "cam", label: "CAM", x: 50, y: 38 },
-    { id: "rw", label: "RW", x: 77, y: 39 },
-    { id: "st", label: "ST", x: 50, y: 20 },
+    { id: "rw", label: "RW", x: 80, y: 40 },
+    { id: "st", label: "ST", x: 50, y: 19 },
   ],
 };
 
@@ -68,6 +68,9 @@ const dom = {
   prepDateInput: $("#prepDateInput"),
   prepOpponentInput: $("#prepOpponentInput"),
   prepTitleInput: $("#prepTitleInput"),
+  matchPrepCard: $(".match-prep-card"),
+  matchPrepBody: $("#matchPrepBody"),
+  togglePrepButton: $("#togglePrepButton"),
   formationParticipantList: $("#formationParticipantList"),
   quarterCountSelect: $("#quarterCountSelect"),
   formationSelect: $("#formationSelect"),
@@ -121,6 +124,7 @@ function defaultState() {
         title: "",
         participantIds: [],
         guests: [],
+        isPrepCollapsed: false,
       },
       squads: {},
     },
@@ -156,6 +160,7 @@ function normalizeState(saved) {
     ...base.formation.matchInfo,
     ...(next.formation.matchInfo || {}),
   };
+  next.formation.matchInfo.isPrepCollapsed = Boolean(next.formation.matchInfo.isPrepCollapsed);
   next.formation.matchInfo.participantIds = Array.isArray(next.formation.matchInfo.participantIds)
     ? next.formation.matchInfo.participantIds.filter((id) => next.members.some((member) => member.id === id))
     : [];
@@ -388,6 +393,9 @@ function renderMatchPrep() {
   dom.prepDateInput.value = matchInfo.date || "";
   dom.prepOpponentInput.value = matchInfo.opponent || "";
   dom.prepTitleInput.value = matchInfo.title || "";
+  dom.matchPrepCard.classList.toggle("collapsed", matchInfo.isPrepCollapsed);
+  dom.togglePrepButton.textContent = matchInfo.isPrepCollapsed ? "펼치기 ▼" : "접기 ▲";
+  dom.togglePrepButton.setAttribute("aria-expanded", String(!matchInfo.isPrepCollapsed));
 
   dom.formationParticipantList.innerHTML = state.members.length
     ? sortByName(state.members)
@@ -482,7 +490,7 @@ function renderPlayerPool() {
             `
             : "";
           return `
-            <article class="player-pool-card" draggable="true" data-drag-player-id="${player.id}">
+            <article class="player-pool-card${player.isGuest ? " guest-card" : ""}" draggable="true" data-drag-player-id="${player.id}">
               <div class="player-pool-name">
                 <span>${escapeHtml(player.name)}</span>
               </div>
@@ -960,6 +968,13 @@ function bindEvents() {
   dom.prepTitleInput.addEventListener("input", () => {
     getMatchInfo().title = dom.prepTitleInput.value.trim();
     saveState();
+  });
+
+  dom.togglePrepButton.addEventListener("click", () => {
+    const matchInfo = getMatchInfo();
+    matchInfo.isPrepCollapsed = !matchInfo.isPrepCollapsed;
+    saveState();
+    renderMatchPrep();
   });
 
   dom.formationParticipantList.addEventListener("change", (event) => {

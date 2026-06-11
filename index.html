@@ -112,24 +112,27 @@
         <section class="match-prep-card" aria-labelledby="match-prep-title">
           <div class="match-prep-heading">
             <h3 id="match-prep-title">경기 준비</h3>
+            <button class="secondary-button collapse-button" type="button" id="togglePrepButton" aria-expanded="true">접기 ▲</button>
           </div>
-          <div class="match-prep-grid">
-            <label>
-              경기 날짜
-              <input id="prepDateInput" type="date" />
-            </label>
-            <label>
-              상대팀
-              <input id="prepOpponentInput" type="text" placeholder="예: 부산FC" autocomplete="off" />
-            </label>
-            <label>
-              경기 메모 또는 경기명
-              <input id="prepTitleInput" type="text" placeholder="예: 6월 16일 자체전" autocomplete="off" />
-            </label>
-          </div>
-          <div>
-            <h4 class="sub-title">출전 선수 선택</h4>
-            <div class="prep-participant-list" id="formationParticipantList"></div>
+          <div class="match-prep-body" id="matchPrepBody">
+            <div class="match-prep-grid">
+              <label>
+                경기 날짜
+                <input id="prepDateInput" type="date" />
+              </label>
+              <label>
+                상대팀
+                <input id="prepOpponentInput" type="text" placeholder="예: 부산FC" autocomplete="off" />
+              </label>
+              <label>
+                경기 메모 또는 경기명
+                <input id="prepTitleInput" type="text" placeholder="예: 6월 16일 자체전" autocomplete="off" />
+              </label>
+            </div>
+            <div>
+              <h4 class="sub-title">출전 선수 선택</h4>
+              <div class="prep-participant-list" id="formationParticipantList"></div>
+            </div>
           </div>
         </section>
 

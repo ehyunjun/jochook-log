@@ -467,7 +467,7 @@ main {
 
 .match-prep-card {
   display: grid;
-  gap: 16px;
+  gap: 14px;
   margin-bottom: 16px;
   padding: 18px;
 }
@@ -477,6 +477,20 @@ main {
   justify-content: space-between;
   gap: 12px;
   align-items: center;
+}
+
+.collapse-button {
+  min-height: 34px;
+  padding: 0 12px;
+}
+
+.match-prep-body {
+  display: grid;
+  gap: 16px;
+}
+
+.match-prep-card.collapsed .match-prep-body {
+  display: none;
 }
 
 .match-prep-grid {
@@ -659,10 +673,10 @@ main {
   left: var(--x);
   top: var(--y);
   display: grid;
-  gap: 5px;
-  width: 108px;
-  min-height: 92px;
-  padding: 8px;
+  gap: 4px;
+  width: 96px;
+  min-height: 82px;
+  padding: 7px;
   border: 1px solid rgba(255, 255, 255, 0.7);
   border-radius: var(--radius);
   background: rgba(255, 255, 255, 0.92);
@@ -692,7 +706,7 @@ main {
 
 .slot-label {
   color: var(--green-dark);
-  font-size: 0.82rem;
+  font-size: 0.78rem;
   font-weight: 900;
   text-align: center;
 }
@@ -701,7 +715,7 @@ main {
   display: grid;
   align-content: center;
   gap: 4px;
-  min-height: 42px;
+  min-height: 38px;
   border-radius: var(--radius);
   background: var(--surface-strong);
   padding: 6px;
@@ -711,7 +725,7 @@ main {
 .slot-player strong {
   overflow: hidden;
   color: var(--ink);
-  font-size: 0.98rem;
+  font-size: 0.9rem;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -720,7 +734,7 @@ main {
   display: -webkit-box;
   overflow: hidden;
   color: var(--muted);
-  font-size: 0.7rem;
+  font-size: 0.66rem;
   font-weight: 800;
   line-height: 1.2;
   -webkit-box-orient: vertical;
@@ -734,9 +748,9 @@ main {
 .slot-note-button {
   justify-self: center;
   display: inline-grid;
-  width: 26px;
-  height: 26px;
-  min-height: 26px;
+  width: 24px;
+  height: 24px;
+  min-height: 24px;
   place-items: center;
   border: 1px solid rgba(20, 122, 61, 0.28);
   border-radius: 50%;
@@ -805,6 +819,7 @@ main {
 }
 
 .player-pool-card {
+  position: relative;
   display: grid;
   gap: 6px;
   border: 1px solid var(--line);
@@ -818,6 +833,10 @@ main {
     box-shadow 0.18s ease,
     transform 0.18s ease,
     background 0.18s ease;
+}
+
+.player-pool-card.guest-card {
+  padding-right: 86px;
 }
 
 .player-pool-card:hover {
@@ -852,14 +871,26 @@ main {
 }
 
 .guest-actions {
+  position: absolute;
+  top: 8px;
+  right: 8px;
   display: flex;
   gap: 6px;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.18s ease;
 }
 
 .guest-actions button {
-  min-height: 30px;
-  padding: 0 9px;
-  font-size: 0.78rem;
+  min-height: 26px;
+  padding: 0 7px;
+  font-size: 0.72rem;
+}
+
+.player-pool-card:hover .guest-actions,
+.player-pool-card:focus-within .guest-actions {
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .delete-guest-button {
@@ -1068,7 +1099,7 @@ main {
   }
 
   .position-slot {
-    width: 100px;
+    width: 92px;
   }
 
   .primary-save {
@@ -1078,6 +1109,11 @@ main {
 
 @media (hover: none) {
   .slot-note-button {
+    opacity: 1;
+    pointer-events: auto;
+  }
+
+  .guest-actions {
     opacity: 1;
     pointer-events: auto;
   }
