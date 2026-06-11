@@ -4,7 +4,7 @@ const STORAGE_KEY = "jochookLogState";
 const MAX_QUARTERS = 10;
 const SUPABASE_URL = "https://hpobxpmhisfpfcurqvkv.supabase.co";
 // anon/public key만 입력하세요. service_role 키는 브라우저 코드에 넣지 않습니다.
-const SUPABASE_ANON_KEY = "여기에_anon_key_입력";
+const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imhwb2J4cG1oaXNmcGZjdXJxdmt2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODExNzg0NDcsImV4cCI6MjA5Njc1NDQ0N30.xgXc3FeWit2JsQC5dAdjNY-oOQ91Yq4qaGq0GT8H5Zg";
 const supabaseClient =
   window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("입력")
     ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
@@ -215,7 +215,7 @@ function buildTeamShareData() {
 function clearTeamShareUrl() {
   if (!dom.shareUrlBox) return;
   dom.shareUrlBox.hidden = true;
-  dom.shareUrlOutput.value = "";
+  if (dom.shareUrlOutput) dom.shareUrlOutput.value = "";
 }
 
 function makeTeamShareUrl() {
@@ -225,6 +225,7 @@ function makeTeamShareUrl() {
 }
 
 function showTeamShareUrl() {
+  if (!dom.shareUrlBox || !dom.shareUrlOutput || !dom.teamShareInfo) return;
   if (!state.team.name && !state.members.length) {
     dom.teamShareInfo.textContent = "공유할 팀원 정보가 없습니다.";
     return;
@@ -236,6 +237,7 @@ function showTeamShareUrl() {
 }
 
 async function copyTeamShareUrl() {
+  if (!dom.shareUrlOutput || !dom.teamShareInfo) return;
   if (!dom.shareUrlOutput.value) {
     showTeamShareUrl();
   }
@@ -281,7 +283,7 @@ function resetRuntimeState() {
 
 async function saveStateToSupabase() {
   if (!supabaseClient) {
-    alert("Supabase 연결 정보가 없습니다. js/app.js의 SUPABASE_ANON_KEY에 anon public key를 입력해 주세요.");
+    alert("팀 정보 저장 연결 정보가 없습니다. 설정 키를 확인해 주세요.");
     return;
   }
 
@@ -311,7 +313,7 @@ async function saveStateToSupabase() {
 
   if (error) {
     console.error(error);
-    alert("Supabase 저장에 실패했습니다.");
+    alert("팀 정보 저장에 실패했습니다.");
     return;
   }
 
@@ -319,14 +321,14 @@ async function saveStateToSupabase() {
   renderAll();
   if (dom.cloudCodeInput) dom.cloudCodeInput.value = state.sync.shareCode;
   if (dom.cloudSyncInfo) {
-    dom.cloudSyncInfo.textContent = `DB 저장 완료. 공유 코드: ${state.sync.shareCode}`;
+    dom.cloudSyncInfo.textContent = `팀 정보가 저장되었습니다. 공유 코드: ${state.sync.shareCode}`;
   }
-  alert(`Supabase에 저장했습니다. 공유 코드: ${state.sync.shareCode}`);
+  alert(`팀 정보가 저장되었습니다. 공유 코드: ${state.sync.shareCode}`);
 }
 
 async function loadStateFromSupabase(shareCode) {
   if (!supabaseClient) {
-    alert("Supabase 연결 정보가 없습니다. js/app.js의 SUPABASE_ANON_KEY에 anon public key를 입력해 주세요.");
+    alert("팀 정보 저장 연결 정보가 없습니다. 설정 키를 확인해 주세요.");
     return;
   }
 
@@ -344,11 +346,11 @@ async function loadStateFromSupabase(shareCode) {
 
   if (error || !data?.app_state) {
     console.error(error);
-    alert("해당 공유 코드의 팀 데이터를 찾을 수 없습니다.");
+    alert("해당 공유 코드의 팀 정보를 찾을 수 없습니다.");
     return;
   }
 
-  if (hasCurrentLocalData() && !confirm("현재 저장된 데이터를 Supabase 팀 데이터로 교체할까요?")) {
+  if (hasCurrentLocalData() && !confirm("현재 저장된 팀 정보를 불러온 팀 정보로 바꿀까요?")) {
     return;
   }
 
@@ -362,9 +364,9 @@ async function loadStateFromSupabase(shareCode) {
 
   if (dom.cloudCodeInput) dom.cloudCodeInput.value = data.share_code;
   if (dom.cloudSyncInfo) {
-    dom.cloudSyncInfo.textContent = `DB에서 팀 데이터를 불러왔습니다. 공유 코드: ${data.share_code}`;
+    dom.cloudSyncInfo.textContent = `팀 정보를 불러왔습니다. 공유 코드: ${data.share_code}`;
   }
-  alert("Supabase에서 팀 데이터를 불러왔습니다.");
+  alert("팀 정보를 불러왔습니다.");
 }
 
 function loadTeamFromShareHash() {
@@ -523,8 +525,8 @@ function renderTeam() {
   dom.teamNameDisplay.textContent = state.team.name || "팀 없음";
   if (dom.cloudSyncInfo) {
     dom.cloudSyncInfo.textContent = state.sync?.shareCode
-      ? `현재 DB 공유 코드: ${state.sync.shareCode}`
-      : "DB 저장을 누르면 전체 상태 공유 코드가 생성됩니다.";
+      ? `현재 공유 코드: ${state.sync.shareCode}`
+      : "저장하면 공유 코드가 생성됩니다.";
   }
   if (dom.cloudCodeInput && state.sync?.shareCode && !dom.cloudCodeInput.value) {
     dom.cloudCodeInput.value = state.sync.shareCode;
@@ -1303,8 +1305,12 @@ function bindEvents() {
     dom.memberForm.reset();
   });
 
-  dom.makeShareUrlButton.addEventListener("click", showTeamShareUrl);
-  dom.copyShareUrlButton.addEventListener("click", copyTeamShareUrl);
+  if (dom.makeShareUrlButton) {
+    dom.makeShareUrlButton.addEventListener("click", showTeamShareUrl);
+  }
+  if (dom.copyShareUrlButton) {
+    dom.copyShareUrlButton.addEventListener("click", copyTeamShareUrl);
+  }
   if (dom.saveCloudButton) {
     dom.saveCloudButton.addEventListener("click", saveStateToSupabase);
   }
@@ -1576,5 +1582,7 @@ const sharedTeamLoaded = loadTeamFromShareHash();
 renderAll();
 if (sharedTeamLoaded) {
   setActiveTab("team");
-  dom.teamShareInfo.textContent = "공유 URL에서 팀원 정보를 불러왔습니다.";
+  if (dom.cloudSyncInfo) {
+    dom.cloudSyncInfo.textContent = "공유된 팀원 정보를 불러왔습니다.";
+  }
 }

@@ -60,21 +60,13 @@
               <span class="label-text">팀 이름</span>
               <strong id="teamNameDisplay">팀 없음</strong>
             </div>
-            <div class="team-share-box">
-              <button class="secondary-button" type="button" id="makeShareUrlButton">공유 URL 만들기</button>
-              <div class="share-url-row" id="shareUrlBox" hidden>
-                <input id="shareUrlOutput" type="text" readonly aria-label="팀원 정보 공유 URL" />
-                <button class="secondary-button" type="button" id="copyShareUrlButton">공유 URL 복사</button>
-              </div>
-              <p class="helper-text" id="teamShareInfo">현재 팀 이름과 팀원 목록만 URL로 공유합니다.</p>
-            </div>
             <div class="team-sync-box">
-              <h3>DB 공유</h3>
-              <p class="helper-text">팀원, 포메이션, 메모, 경기 기록까지 전체 상태를 Supabase에 저장하고 공유 코드로 불러옵니다.</p>
-              <button class="secondary-button" type="button" id="saveCloudButton">DB 저장</button>
+              <h3>팀 정보 저장</h3>
+              <p class="helper-text">팀원, 포메이션, 메모, 경기 기록을 저장하고 공유 코드로 다시 불러올 수 있습니다.</p>
+              <button class="secondary-button" type="button" id="saveCloudButton">팀 정보 저장</button>
               <div class="share-code-row">
                 <input id="cloudCodeInput" type="text" placeholder="공유 코드 입력" autocomplete="off" />
-                <button class="secondary-button" type="button" id="loadCloudButton">불러오기</button>
+                <button class="secondary-button" type="button" id="loadCloudButton">팀 정보 불러오기</button>
               </div>
               <p class="helper-text" id="cloudSyncInfo"></p>
             </div>
