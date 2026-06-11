@@ -333,9 +333,20 @@ main {
   font-size: 1.3rem;
 }
 
-.team-share-box {
+.team-share-box,
+.team-sync-box {
   display: grid;
   gap: 10px;
+}
+
+.team-sync-box {
+  border-top: 1px solid var(--line);
+  padding-top: 14px;
+}
+
+.team-sync-box h3 {
+  margin: 0;
+  font-size: 1rem;
 }
 
 .share-url-row {
@@ -345,6 +356,16 @@ main {
 
 .share-url-row input {
   font-size: 0.84rem;
+}
+
+.share-code-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.share-code-row button {
+  min-width: 90px;
 }
 
 .member-form {
@@ -1250,6 +1271,10 @@ main {
 
   .member-submit {
     justify-self: stretch;
+  }
+
+  .share-code-row {
+    grid-template-columns: 1fr;
   }
 
   .formation-workspace {

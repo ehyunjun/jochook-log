@@ -2,6 +2,13 @@
 
 const STORAGE_KEY = "jochookLogState";
 const MAX_QUARTERS = 10;
+const SUPABASE_URL = "https://hpobxpmhisfpfcurqvkv.supabase.co";
+// anon/public key만 입력하세요. service_role 키는 브라우저 코드에 넣지 않습니다.
+const SUPABASE_ANON_KEY = "여기에_anon_key_입력";
+const supabaseClient =
+  window.supabase && SUPABASE_URL && SUPABASE_ANON_KEY && !SUPABASE_ANON_KEY.includes("입력")
+    ? window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY)
+    : null;
 
 const FORMATIONS = {
   "4-4-2": [
@@ -60,6 +67,10 @@ const dom = {
   shareUrlBox: $("#shareUrlBox"),
   shareUrlOutput: $("#shareUrlOutput"),
   teamShareInfo: $("#teamShareInfo"),
+  saveCloudButton: $("#saveCloudButton"),
+  loadCloudButton: $("#loadCloudButton"),
+  cloudCodeInput: $("#cloudCodeInput"),
+  cloudSyncInfo: $("#cloudSyncInfo"),
   memberForm: $("#memberForm"),
   memberNameInput: $("#memberNameInput"),
   memberNumberInput: $("#memberNumberInput"),
@@ -130,6 +141,9 @@ function defaultState() {
       squads: {},
     },
     matches: [],
+    sync: {
+      shareCode: "",
+    },
   };
 }
 
@@ -150,6 +164,7 @@ function normalizeState(saved) {
     ...saved,
     team: { name: saved.team?.name || "" },
     formation: { ...base.formation, ...(saved.formation || {}) },
+    sync: { ...base.sync, ...(saved.sync || {}) },
   };
 
   next.members = Array.isArray(saved.members) ? saved.members : [];
@@ -233,6 +248,123 @@ async function copyTeamShareUrl() {
     document.execCommand("copy");
     dom.teamShareInfo.textContent = "공유 URL을 복사했습니다.";
   }
+}
+
+function makeShareCode() {
+  return `JCL-${Math.random().toString(36).slice(2, 8).toUpperCase()}`;
+}
+
+function hasCurrentLocalData() {
+  const hasSquadData = Object.values(state.formation?.squads || {}).some((squad) =>
+    Object.values(squad?.slots || {}).some((slot) => slot?.playerId || slot?.note),
+  );
+  const matchInfo = state.formation?.matchInfo || {};
+  return Boolean(
+    state.team.name ||
+    state.members.length ||
+    state.matches.length ||
+    hasSquadData ||
+    matchInfo.date ||
+    matchInfo.opponent ||
+    matchInfo.participantIds?.length ||
+    matchInfo.guests?.length,
+  );
+}
+
+function resetRuntimeState() {
+  selectedMemberId = null;
+  selectedPoolPlayerId = null;
+  selectedRecordMatchId = null;
+  activeMemoSlotId = null;
+  recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
+}
+
+async function saveStateToSupabase() {
+  if (!supabaseClient) {
+    alert("Supabase 연결 정보가 없습니다. js/app.js의 SUPABASE_ANON_KEY에 anon public key를 입력해 주세요.");
+    return;
+  }
+
+  if (!state.team.name) {
+    alert("팀을 먼저 생성해 주세요.");
+    return;
+  }
+
+  if (!state.sync) state.sync = {};
+  if (!state.sync.shareCode) {
+    state.sync.shareCode = makeShareCode();
+  }
+
+  const now = new Date().toISOString();
+  const appState = JSON.parse(JSON.stringify(state));
+  const { error } = await supabaseClient
+    .from("teams")
+    .upsert(
+      {
+        name: state.team.name,
+        share_code: state.sync.shareCode,
+        app_state: appState,
+        updated_at: now,
+      },
+      { onConflict: "share_code" },
+    );
+
+  if (error) {
+    console.error(error);
+    alert("Supabase 저장에 실패했습니다.");
+    return;
+  }
+
+  saveState();
+  renderAll();
+  if (dom.cloudCodeInput) dom.cloudCodeInput.value = state.sync.shareCode;
+  if (dom.cloudSyncInfo) {
+    dom.cloudSyncInfo.textContent = `DB 저장 완료. 공유 코드: ${state.sync.shareCode}`;
+  }
+  alert(`Supabase에 저장했습니다. 공유 코드: ${state.sync.shareCode}`);
+}
+
+async function loadStateFromSupabase(shareCode) {
+  if (!supabaseClient) {
+    alert("Supabase 연결 정보가 없습니다. js/app.js의 SUPABASE_ANON_KEY에 anon public key를 입력해 주세요.");
+    return;
+  }
+
+  const code = String(shareCode || "").trim().toUpperCase();
+  if (!code) {
+    alert("공유 코드를 입력해 주세요.");
+    return;
+  }
+
+  const { data, error } = await supabaseClient
+    .from("teams")
+    .select("app_state, share_code")
+    .eq("share_code", code)
+    .single();
+
+  if (error || !data?.app_state) {
+    console.error(error);
+    alert("해당 공유 코드의 팀 데이터를 찾을 수 없습니다.");
+    return;
+  }
+
+  if (hasCurrentLocalData() && !confirm("현재 저장된 데이터를 Supabase 팀 데이터로 교체할까요?")) {
+    return;
+  }
+
+  state = normalizeState(data.app_state);
+  if (!state.sync) state.sync = {};
+  state.sync.shareCode = data.share_code;
+  resetRuntimeState();
+  saveState();
+  renderAll();
+  setActiveTab("team");
+
+  if (dom.cloudCodeInput) dom.cloudCodeInput.value = data.share_code;
+  if (dom.cloudSyncInfo) {
+    dom.cloudSyncInfo.textContent = `DB에서 팀 데이터를 불러왔습니다. 공유 코드: ${data.share_code}`;
+  }
+  alert("Supabase에서 팀 데이터를 불러왔습니다.");
 }
 
 function loadTeamFromShareHash() {
@@ -389,6 +521,14 @@ function setActiveTab(tabId) {
 
 function renderTeam() {
   dom.teamNameDisplay.textContent = state.team.name || "팀 없음";
+  if (dom.cloudSyncInfo) {
+    dom.cloudSyncInfo.textContent = state.sync?.shareCode
+      ? `현재 DB 공유 코드: ${state.sync.shareCode}`
+      : "DB 저장을 누르면 전체 상태 공유 코드가 생성됩니다.";
+  }
+  if (dom.cloudCodeInput && state.sync?.shareCode && !dom.cloudCodeInput.value) {
+    dom.cloudCodeInput.value = state.sync.shareCode;
+  }
 
   if (!state.members.length) {
     dom.membersGrid.innerHTML = `<p class="empty-text">아직 등록된 팀원이 없습니다.</p>`;
@@ -1165,6 +1305,14 @@ function bindEvents() {
 
   dom.makeShareUrlButton.addEventListener("click", showTeamShareUrl);
   dom.copyShareUrlButton.addEventListener("click", copyTeamShareUrl);
+  if (dom.saveCloudButton) {
+    dom.saveCloudButton.addEventListener("click", saveStateToSupabase);
+  }
+  if (dom.loadCloudButton) {
+    dom.loadCloudButton.addEventListener("click", () => {
+      loadStateFromSupabase(dom.cloudCodeInput?.value || "");
+    });
+  }
 
   dom.membersGrid.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("[data-delete-member]");
