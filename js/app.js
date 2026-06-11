@@ -931,21 +931,20 @@ function saveMatch(event) {
     createdAt: new Date().toISOString(),
   });
 
-  function deleteMatch(matchId) {
-    const match = state.matches.find((item) => item.id === matchId);
-    if (!match) return;
-
-    if (!confirm(`"${match.title}" 경기 기록을 삭제할까요?`)) return;
-
-    state.matches = state.matches.filter((item) => item.id !== matchId);
-
-    saveState();
-    renderAll();
-  }
-
   recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
   dom.recordForm.reset();
   dom.matchDateInput.value = new Date().toISOString().slice(0, 10);
+  saveState();
+  renderAll();
+}
+
+function deleteMatch(matchId) {
+  const match = state.matches.find((item) => item.id === matchId);
+  if (!match) return;
+
+  if (!confirm(`"${match.title}" 경기 기록을 삭제할까요?`)) return;
+
+  state.matches = state.matches.filter((item) => item.id !== matchId);
   saveState();
   renderAll();
 }
