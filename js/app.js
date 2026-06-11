@@ -483,9 +483,6 @@ function renderPlayerPool() {
   if (!selectedPlayer) {
     selectedPoolPlayerId = null;
   }
-  const selectedHint = selectedPlayer
-    ? `<p class="selected-player-hint"><strong>선택된 선수: ${escapeHtml(selectedPlayer.name)}</strong><span>배치할 포지션을 눌러주세요.</span></p>`
-    : "";
   const playerListMarkup = unplacedPlayers.length
     ? unplacedPlayers
         .map((player) => {
@@ -515,7 +512,6 @@ function renderPlayerPool() {
     <div class="player-pool-header">
       <h3>후보선수</h3>
     </div>
-    ${selectedHint}
     <div class="player-pool-list">
       ${playerListMarkup}
     </div>
