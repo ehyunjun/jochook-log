@@ -1,6 +1,7 @@
 "use strict";
 
 const STORAGE_KEY = "jochookLogState";
+const MAX_QUARTERS = 10;
 
 const FORMATIONS = {
   "4-4-2": [
@@ -68,7 +69,11 @@ const dom = {
   quarterCountSelect: $("#quarterCountSelect"),
   formationSelect: $("#formationSelect"),
   quarterTabs: $("#quarterTabs"),
+  formationNotice: $("#formationNotice"),
+  formationCaptureArea: $("#formationCaptureArea"),
   squadBoard: $("#squadBoard"),
+  playerPoolPanel: $("#playerPoolPanel"),
+  copyImageButton: $("#copyImageButton"),
   sharePreview: $("#sharePreview"),
   copyShareButton: $("#copyShareButton"),
   copyStatus: $("#copyStatus"),
@@ -128,7 +133,7 @@ function normalizeState(saved) {
 
   next.members = Array.isArray(saved.members) ? saved.members : [];
   next.matches = Array.isArray(saved.matches) ? saved.matches : [];
-  next.formation.quarters = clamp(Number(next.formation.quarters) || 2, 1, 4);
+  next.formation.quarters = clamp(Number(next.formation.quarters) || 2, 1, MAX_QUARTERS);
   next.formation.shape = FORMATIONS[next.formation.shape] ? next.formation.shape : "4-3-3";
   next.formation.activeQuarter = clamp(Number(next.formation.activeQuarter) || 1, 1, next.formation.quarters);
   next.formation.squads = next.formation.squads || {};
@@ -164,6 +169,10 @@ function ensureQuarterData(targetState = state) {
 function getMemberName(memberId) {
   const member = state.members.find((item) => item.id === memberId);
   return member ? member.name : "삭제된 선수";
+}
+
+function getMemberById(memberId) {
+  return state.members.find((item) => item.id === memberId);
 }
 
 function countByPlayer(events) {
@@ -298,13 +307,16 @@ function renderFormation() {
   dom.quarterCountSelect.value = String(state.formation.quarters);
   dom.formationSelect.value = state.formation.shape;
 
-  dom.quarterTabs.innerHTML = Array.from({ length: state.formation.quarters }, (_, index) => {
+  const quarterButtons = Array.from({ length: state.formation.quarters }, (_, index) => {
     const quarter = index + 1;
     const active = quarter === state.formation.activeQuarter ? "active" : "";
     return `<button class="${active}" type="button" data-quarter="${quarter}">${quarter}쿼터</button>`;
   }).join("");
+  const addButtonDisabled = state.formation.quarters >= MAX_QUARTERS ? "disabled" : "";
+  dom.quarterTabs.innerHTML = `${quarterButtons}<button class="add-quarter-button" type="button" data-add-quarter ${addButtonDisabled} aria-label="쿼터 추가">+</button>`;
 
   renderSquadBoard();
+  renderPlayerPool();
   renderSharePreview();
 }
 
@@ -325,18 +337,63 @@ function renderSquadBoard() {
     slots
       .map((slot) => {
         const savedSlot = quarterData.slots[slot.id] || {};
+        const player = getMemberById(savedSlot.playerId);
+        const playerName = player ? player.name : "선수 드롭";
+        const playerMeta = player ? `#${player.number || "-"} · ${player.position || "포지션 미정"}` : "드래그해서 배치";
+        const emptyClass = player ? "" : " empty";
         return `
-          <div class="position-slot" style="--x:${slot.x}%; --y:${slot.y}%;">
+          <div class="position-slot" data-slot-id="${slot.id}" style="--x:${slot.x}%; --y:${slot.y}%;">
             <div class="slot-label">${slot.label}</div>
-            <select data-slot-player="${slot.id}" aria-label="${slot.label} 선수 선택">
-              <option value="">선수 선택</option>
+            <div class="slot-player${emptyClass}">
+              <strong>${escapeHtml(playerName)}</strong>
+              <span>${escapeHtml(playerMeta)}</span>
+            </div>
+            <input data-slot-note="${slot.id}" type="text" value="${escapeHtml(savedSlot.note || "")}" placeholder="메모" aria-label="${slot.label} 메모" />
+            <select class="slot-select" data-slot-player="${slot.id}" aria-label="${slot.label} 선수 선택">
+              <option value="">보조 선택</option>
               ${state.members.map((member) => `<option value="${member.id}" ${savedSlot.playerId === member.id ? "selected" : ""}>${escapeHtml(member.name)}</option>`).join("")}
             </select>
-            <input data-slot-note="${slot.id}" type="text" value="${escapeHtml(savedSlot.note || "")}" placeholder="메모" aria-label="${slot.label} 메모" />
           </div>
         `;
       })
       .join("");
+}
+
+function renderPlayerPool() {
+  if (!state.members.length) {
+    dom.playerPoolPanel.innerHTML = `
+      <h3>선수 목록</h3>
+      <p class="empty-text">나의 팀 화면에서 팀원을 먼저 추가해 주세요.</p>
+    `;
+    return;
+  }
+
+  const placedIds = new Set(
+    Object.values(state.formation.squads[state.formation.activeQuarter]?.slots || {})
+      .map((slot) => slot.playerId)
+      .filter(Boolean),
+  );
+
+  dom.playerPoolPanel.innerHTML = `
+    <h3>선수 목록</h3>
+    <div class="player-pool-list">
+      ${state.members
+        .map((member) => {
+          const placedClass = placedIds.has(member.id) ? " placed" : "";
+          const badge = member.isMercenary ? `<span class="badge">용병</span>` : "";
+          return `
+            <article class="player-pool-card${placedClass}" draggable="true" data-drag-member-id="${member.id}">
+              <div class="player-pool-name">
+                <span>${escapeHtml(member.name)}</span>
+                ${badge}
+              </div>
+              <div class="player-pool-meta">#${escapeHtml(member.number || "-")} · ${escapeHtml(member.position || "포지션 미정")}</div>
+            </article>
+          `;
+        })
+        .join("")}
+    </div>
+  `;
 }
 
 function renderSharePreview() {
@@ -481,6 +538,35 @@ function updateSquadSlot(slotId, patch) {
   renderSharePreview();
 }
 
+function placePlayerInSlot(slotId, memberId) {
+  if (!getMemberById(memberId)) return;
+  const duplicates = getDuplicateSlotLabels(memberId, slotId);
+  updateSquadSlot(slotId, { playerId: memberId });
+  renderFormation();
+
+  if (duplicates.length) {
+    setFormationNotice(`${getMemberName(memberId)} 선수는 이미 ${duplicates.join(", ")}에도 배치되어 있습니다.`, true);
+  } else {
+    setFormationNotice(`${getMemberName(memberId)} 선수를 배치했습니다.`);
+  }
+}
+
+function getDuplicateSlotLabels(memberId, nextSlotId) {
+  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  return FORMATIONS[state.formation.shape]
+    .filter((slot) => slot.id !== nextSlotId && quarterData.slots[slot.id]?.playerId === memberId)
+    .map((slot) => slot.label);
+}
+
+function clearDragOverSlots() {
+  $$(".position-slot.drag-over").forEach((slot) => slot.classList.remove("drag-over"));
+}
+
+function setFormationNotice(message, isWarning = false) {
+  dom.formationNotice.textContent = message;
+  dom.formationNotice.classList.toggle("warning", isWarning);
+}
+
 function saveMatch(event) {
   event.preventDefault();
 
@@ -507,6 +593,68 @@ function saveMatch(event) {
   dom.matchDateInput.value = new Date().toISOString().slice(0, 10);
   saveState();
   renderAll();
+}
+
+async function copyFormationImage() {
+  if (!window.html2canvas) {
+    setFormationNotice("이미지 복사 라이브러리를 불러오지 못했습니다.", true);
+    return;
+  }
+
+  try {
+    setFormationNotice("포메이션 이미지를 만드는 중입니다.");
+    const canvas = await window.html2canvas(dom.formationCaptureArea, {
+      backgroundColor: "#f4f8f3",
+      scale: 2,
+      useCORS: true,
+    });
+    const blob = await canvasToBlob(canvas);
+
+    if (navigator.clipboard?.write && "ClipboardItem" in window) {
+      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+      setFormationNotice("포메이션 이미지가 클립보드에 복사되었습니다.");
+      return;
+    }
+
+    downloadBlob(blob);
+    setFormationNotice("브라우저에서 이미지 복사를 지원하지 않아 파일로 저장합니다.", true);
+  } catch {
+    try {
+      const canvas = await window.html2canvas(dom.formationCaptureArea, {
+        backgroundColor: "#f4f8f3",
+        scale: 2,
+        useCORS: true,
+      });
+      const blob = await canvasToBlob(canvas);
+      downloadBlob(blob);
+      setFormationNotice("브라우저에서 이미지 복사를 지원하지 않아 파일로 저장합니다.", true);
+    } catch {
+      setFormationNotice("이미지 복사에 실패했습니다. 다시 시도해 주세요.", true);
+    }
+  }
+}
+
+function canvasToBlob(canvas) {
+  return new Promise((resolve, reject) => {
+    canvas.toBlob((blob) => {
+      if (blob) {
+        resolve(blob);
+      } else {
+        reject(new Error("Canvas blob creation failed"));
+      }
+    }, "image/png");
+  });
+}
+
+function downloadBlob(blob) {
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = `jochook-log-${state.formation.activeQuarter}q.png`;
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 function escapeHtml(value) {
@@ -586,7 +734,7 @@ function bindEvents() {
   });
 
   dom.quarterCountSelect.addEventListener("change", () => {
-    state.formation.quarters = Number(dom.quarterCountSelect.value);
+    state.formation.quarters = clamp(Number(dom.quarterCountSelect.value), 1, MAX_QUARTERS);
     state.formation.activeQuarter = clamp(state.formation.activeQuarter, 1, state.formation.quarters);
     ensureQuarterData();
     saveState();
@@ -600,6 +748,18 @@ function bindEvents() {
   });
 
   dom.quarterTabs.addEventListener("click", (event) => {
+    const addButton = event.target.closest("[data-add-quarter]");
+    if (addButton) {
+      if (state.formation.quarters >= MAX_QUARTERS) return;
+      state.formation.quarters += 1;
+      state.formation.activeQuarter = state.formation.quarters;
+      ensureQuarterData();
+      saveState();
+      renderFormation();
+      setFormationNotice(`${state.formation.activeQuarter}쿼터가 추가되었습니다.`);
+      return;
+    }
+
     const button = event.target.closest("[data-quarter]");
     if (!button) return;
     state.formation.activeQuarter = Number(button.dataset.quarter);
@@ -610,7 +770,50 @@ function bindEvents() {
   dom.squadBoard.addEventListener("change", (event) => {
     const select = event.target.closest("[data-slot-player]");
     if (!select) return;
-    updateSquadSlot(select.dataset.slotPlayer, { playerId: select.value });
+    if (select.value) {
+      placePlayerInSlot(select.dataset.slotPlayer, select.value);
+      return;
+    }
+    updateSquadSlot(select.dataset.slotPlayer, { playerId: "" });
+    renderFormation();
+    setFormationNotice("슬롯 배치를 비웠습니다.");
+  });
+
+  dom.squadBoard.addEventListener("dragover", (event) => {
+    const slot = event.target.closest("[data-slot-id]");
+    if (!slot) return;
+    event.preventDefault();
+    event.dataTransfer.dropEffect = "copy";
+    slot.classList.add("drag-over");
+  });
+
+  dom.squadBoard.addEventListener("dragleave", (event) => {
+    const slot = event.target.closest("[data-slot-id]");
+    if (!slot || slot.contains(event.relatedTarget)) return;
+    slot.classList.remove("drag-over");
+  });
+
+  dom.squadBoard.addEventListener("drop", (event) => {
+    const slot = event.target.closest("[data-slot-id]");
+    if (!slot) return;
+    event.preventDefault();
+    const memberId = event.dataTransfer.getData("text/plain");
+    clearDragOverSlots();
+    placePlayerInSlot(slot.dataset.slotId, memberId);
+  });
+
+  dom.playerPoolPanel.addEventListener("dragstart", (event) => {
+    const card = event.target.closest("[data-drag-member-id]");
+    if (!card) return;
+    event.dataTransfer.setData("text/plain", card.dataset.dragMemberId);
+    event.dataTransfer.effectAllowed = "copy";
+    card.classList.add("dragging");
+  });
+
+  dom.playerPoolPanel.addEventListener("dragend", (event) => {
+    const card = event.target.closest("[data-drag-member-id]");
+    if (card) card.classList.remove("dragging");
+    clearDragOverSlots();
   });
 
   dom.squadBoard.addEventListener("input", (event) => {
@@ -618,6 +821,8 @@ function bindEvents() {
     if (!input) return;
     updateSquadSlot(input.dataset.slotNote, { note: input.value });
   });
+
+  dom.copyImageButton.addEventListener("click", copyFormationImage);
 
   dom.copyShareButton.addEventListener("click", async () => {
     const text = getShareText();

@@ -107,6 +107,7 @@
             <p class="eyebrow">Squad board</p>
             <h2 id="formation-title">포메이션 만들기</h2>
           </div>
+          <button class="secondary-button" type="button" id="copyImageButton">이미지 복사</button>
         </div>
 
         <div class="settings-row">
@@ -117,6 +118,12 @@
               <option value="2">2쿼터</option>
               <option value="3">3쿼터</option>
               <option value="4">4쿼터</option>
+              <option value="5">5쿼터</option>
+              <option value="6">6쿼터</option>
+              <option value="7">7쿼터</option>
+              <option value="8">8쿼터</option>
+              <option value="9">9쿼터</option>
+              <option value="10">10쿼터</option>
             </select>
           </label>
           <label>
@@ -130,9 +137,14 @@
         </div>
 
         <div class="quarter-tabs" id="quarterTabs" aria-label="쿼터 선택"></div>
+        <p class="helper-text formation-notice" id="formationNotice"></p>
 
-        <div class="field-wrap">
-          <div class="squad-board" id="squadBoard" aria-label="축구장 스쿼드판"></div>
+        <div id="formationCaptureArea" class="formation-workspace">
+          <div class="field-wrap">
+            <div class="squad-board" id="squadBoard" aria-label="축구장 스쿼드판"></div>
+          </div>
+
+          <aside class="player-pool-panel" id="playerPoolPanel" aria-label="선수 목록"></aside>
         </div>
 
         <div class="share-section">
@@ -202,6 +214,7 @@
       </section>
     </main>
 
+    <script src="https://cdn.jsdelivr.net/npm/html2canvas@1.4.1/dist/html2canvas.min.js"></script>
     <script src="js/app.js"></script>
   </body>
 </html>

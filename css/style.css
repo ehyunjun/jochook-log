@@ -485,6 +485,36 @@ main {
   color: #fff;
 }
 
+.quarter-tabs button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+  transform: none;
+}
+
+.add-quarter-button {
+  width: 42px;
+  padding: 0;
+  font-size: 1.25rem;
+}
+
+.formation-notice {
+  min-height: 22px;
+  margin: -4px 0 12px;
+  color: var(--green-dark);
+  font-weight: 700;
+}
+
+.formation-notice.warning {
+  color: var(--danger);
+}
+
+.formation-workspace {
+  display: grid;
+  grid-template-columns: minmax(0, 3fr) minmax(230px, 1fr);
+  gap: 16px;
+  align-items: stretch;
+}
+
 .field-wrap {
   overflow-x: auto;
   border-radius: var(--radius);
@@ -571,6 +601,18 @@ main {
   background: rgba(255, 255, 255, 0.92);
   box-shadow: 0 10px 20px rgba(0, 0, 0, 0.16);
   transform: translate(-50%, -50%);
+  transition:
+    border 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.position-slot.drag-over {
+  border-color: var(--accent);
+  background: #fffdf4;
+  box-shadow: 0 0 0 4px rgba(243, 177, 63, 0.34), 0 14px 28px rgba(0, 0, 0, 0.2);
+  transform: translate(-50%, -50%) scale(1.03);
 }
 
 .slot-label {
@@ -580,11 +622,111 @@ main {
   text-align: center;
 }
 
+.slot-player {
+  display: grid;
+  gap: 2px;
+  min-height: 45px;
+  border-radius: var(--radius);
+  background: var(--surface-strong);
+  padding: 8px;
+  text-align: center;
+}
+
+.slot-player strong {
+  overflow: hidden;
+  color: var(--ink);
+  font-size: 0.9rem;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.slot-player span {
+  color: var(--muted);
+  font-size: 0.76rem;
+  font-weight: 800;
+}
+
+.slot-player.empty {
+  border: 1px dashed rgba(20, 122, 61, 0.42);
+  background: rgba(223, 240, 223, 0.68);
+}
+
 .position-slot select,
 .position-slot input {
   min-height: 34px;
   padding: 0 8px;
   font-size: 0.82rem;
+}
+
+.slot-select {
+  color: var(--muted);
+}
+
+.player-pool-panel {
+  display: grid;
+  align-content: start;
+  gap: 12px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: var(--surface);
+  box-shadow: var(--shadow);
+  padding: 16px;
+}
+
+.player-pool-panel h3 {
+  font-size: 1.05rem;
+}
+
+.player-pool-list {
+  display: grid;
+  gap: 10px;
+}
+
+.player-pool-card {
+  display: grid;
+  gap: 6px;
+  border: 1px solid var(--line);
+  border-radius: var(--radius);
+  background: #fbfffb;
+  color: var(--ink);
+  cursor: grab;
+  padding: 12px;
+  transition:
+    border 0.18s ease,
+    box-shadow 0.18s ease,
+    transform 0.18s ease,
+    background 0.18s ease;
+}
+
+.player-pool-card:hover {
+  border-color: var(--green);
+  background: var(--surface-strong);
+  box-shadow: 0 8px 18px rgba(20, 122, 61, 0.14);
+  transform: translateY(-1px);
+}
+
+.player-pool-card.dragging {
+  cursor: grabbing;
+  opacity: 0.55;
+  transform: scale(0.98);
+}
+
+.player-pool-card.placed {
+  border-color: rgba(20, 122, 61, 0.5);
+}
+
+.player-pool-name {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+  align-items: center;
+  font-weight: 900;
+}
+
+.player-pool-meta {
+  color: var(--muted);
+  font-size: 0.86rem;
+  font-weight: 800;
 }
 
 .share-section {
@@ -699,6 +841,7 @@ main {
   .start-layout,
   .team-shell,
   .content-grid,
+  .formation-workspace,
   .record-columns,
   .form-grid {
     grid-template-columns: 1fr;
