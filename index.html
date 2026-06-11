@@ -62,7 +62,6 @@
             <p class="eyebrow">My team</p>
             <h2 id="team-title">나의 팀</h2>
           </div>
-          <button class="secondary-button" type="button" id="addMercenaryButton">일일 용병 추가</button>
         </div>
 
         <div class="team-shell">
@@ -110,6 +109,31 @@
           <button class="secondary-button" type="button" id="copyImageButton">이미지 복사</button>
         </div>
 
+        <section class="match-prep-card" aria-labelledby="match-prep-title">
+          <div class="match-prep-heading">
+            <h3 id="match-prep-title">경기 준비</h3>
+            <button class="secondary-button" type="button" id="addGuestButton">용병 추가</button>
+          </div>
+          <div class="match-prep-grid">
+            <label>
+              경기 날짜
+              <input id="prepDateInput" type="date" />
+            </label>
+            <label>
+              상대팀
+              <input id="prepOpponentInput" type="text" placeholder="예: 부산FC" autocomplete="off" />
+            </label>
+            <label>
+              경기 메모 또는 경기명
+              <input id="prepTitleInput" type="text" placeholder="예: 6월 16일 자체전" autocomplete="off" />
+            </label>
+          </div>
+          <div>
+            <h4 class="sub-title">출전 선수 선택</h4>
+            <div class="prep-participant-list" id="formationParticipantList"></div>
+          </div>
+        </section>
+
         <div class="settings-row">
           <label>
             쿼터 수
@@ -147,13 +171,15 @@
           <aside class="player-pool-panel" id="playerPoolPanel" aria-label="선수 목록"></aside>
         </div>
 
-        <div class="share-section">
-          <div class="share-header">
-            <h3>공유용 보기</h3>
-            <button class="secondary-button" type="button" id="copyShareButton">공유용 텍스트 복사</button>
+        <div class="memo-modal hidden" id="slotMemoModal" aria-hidden="true">
+          <div class="memo-dialog" role="dialog" aria-modal="true" aria-labelledby="memoModalTitle">
+            <h3 id="memoModalTitle">포지션 메모</h3>
+            <textarea id="slotMemoInput" rows="5" placeholder="예: 전방 압박 많이"></textarea>
+            <div class="memo-actions">
+              <button class="secondary-button" type="button" id="closeMemoButton">닫기</button>
+              <button type="button" id="saveMemoButton">저장</button>
+            </div>
           </div>
-          <pre id="sharePreview"></pre>
-          <p class="helper-text" id="copyStatus"></p>
         </div>
       </section>
 

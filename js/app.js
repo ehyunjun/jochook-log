@@ -63,9 +63,13 @@ const dom = {
   memberNameInput: $("#memberNameInput"),
   memberNumberInput: $("#memberNumberInput"),
   memberPositionInput: $("#memberPositionInput"),
-  addMercenaryButton: $("#addMercenaryButton"),
   membersGrid: $("#membersGrid"),
   memberDetail: $("#memberDetail"),
+  prepDateInput: $("#prepDateInput"),
+  prepOpponentInput: $("#prepOpponentInput"),
+  prepTitleInput: $("#prepTitleInput"),
+  formationParticipantList: $("#formationParticipantList"),
+  addGuestButton: $("#addGuestButton"),
   quarterCountSelect: $("#quarterCountSelect"),
   formationSelect: $("#formationSelect"),
   quarterTabs: $("#quarterTabs"),
@@ -74,9 +78,11 @@ const dom = {
   squadBoard: $("#squadBoard"),
   playerPoolPanel: $("#playerPoolPanel"),
   copyImageButton: $("#copyImageButton"),
-  sharePreview: $("#sharePreview"),
-  copyShareButton: $("#copyShareButton"),
-  copyStatus: $("#copyStatus"),
+  slotMemoModal: $("#slotMemoModal"),
+  memoModalTitle: $("#memoModalTitle"),
+  slotMemoInput: $("#slotMemoInput"),
+  closeMemoButton: $("#closeMemoButton"),
+  saveMemoButton: $("#saveMemoButton"),
   recordForm: $("#recordForm"),
   matchTitleInput: $("#matchTitleInput"),
   matchDateInput: $("#matchDateInput"),
@@ -93,10 +99,12 @@ const dom = {
 
 let state = loadState();
 let selectedMemberId = null;
+let activeMemoSlotId = null;
 let recordDraft = {
   participants: new Set(),
   goals: [],
   assists: [],
+  hydratedFromFormation: false,
 };
 
 function defaultState() {
@@ -107,6 +115,13 @@ function defaultState() {
       quarters: 2,
       shape: "4-3-3",
       activeQuarter: 1,
+      matchInfo: {
+        date: "",
+        opponent: "",
+        title: "",
+        participantIds: [],
+        guests: [],
+      },
       squads: {},
     },
     matches: [],
@@ -124,6 +139,7 @@ function loadState() {
 
 function normalizeState(saved) {
   const base = defaultState();
+  const hadMatchInfo = Boolean(saved.formation?.matchInfo);
   const next = {
     ...base,
     ...saved,
@@ -136,6 +152,17 @@ function normalizeState(saved) {
   next.formation.quarters = clamp(Number(next.formation.quarters) || 2, 1, MAX_QUARTERS);
   next.formation.shape = FORMATIONS[next.formation.shape] ? next.formation.shape : "4-3-3";
   next.formation.activeQuarter = clamp(Number(next.formation.activeQuarter) || 1, 1, next.formation.quarters);
+  next.formation.matchInfo = {
+    ...base.formation.matchInfo,
+    ...(next.formation.matchInfo || {}),
+  };
+  next.formation.matchInfo.participantIds = Array.isArray(next.formation.matchInfo.participantIds)
+    ? next.formation.matchInfo.participantIds.filter((id) => next.members.some((member) => member.id === id))
+    : [];
+  next.formation.matchInfo.guests = Array.isArray(next.formation.matchInfo.guests) ? next.formation.matchInfo.guests : [];
+  if (!hadMatchInfo) {
+    next.formation.matchInfo.participantIds = next.members.map((member) => member.id);
+  }
   next.formation.squads = next.formation.squads || {};
   ensureQuarterData(next);
   return next;
@@ -167,12 +194,60 @@ function ensureQuarterData(targetState = state) {
 }
 
 function getMemberName(memberId) {
-  const member = state.members.find((item) => item.id === memberId);
-  return member ? member.name : "삭제된 선수";
+  return getPlayerName(memberId);
 }
 
 function getMemberById(memberId) {
   return state.members.find((item) => item.id === memberId);
+}
+
+function getMatchInfo() {
+  if (!state.formation.matchInfo) {
+    state.formation.matchInfo = defaultState().formation.matchInfo;
+  }
+  return state.formation.matchInfo;
+}
+
+function getGuestById(playerId) {
+  return getMatchInfo().guests.find((guest) => guest.id === playerId);
+}
+
+function getPlayerById(playerId, match = null) {
+  const member = getMemberById(playerId);
+  if (member) return { ...member, isGuest: false };
+  const guest = getGuestById(playerId);
+  if (guest) return { ...guest, number: guest.number || "", position: "용병", isGuest: true };
+  const savedGuest = match?.guests?.find((item) => item.id === playerId);
+  if (savedGuest) return { ...savedGuest, number: savedGuest.number || "", position: "용병", isGuest: true };
+  return null;
+}
+
+function getPlayerName(playerId, match = null) {
+  return getPlayerById(playerId, match)?.name || "삭제된 선수";
+}
+
+function getFormationPlayers() {
+  const matchInfo = getMatchInfo();
+  const selectedMembers = state.members.filter((member) => matchInfo.participantIds.includes(member.id));
+  const guests = matchInfo.guests.map((guest) => ({
+    ...guest,
+    number: guest.number || "",
+    position: "용병",
+    isGuest: true,
+  }));
+  return [...selectedMembers, ...guests];
+}
+
+function getRecordPlayers() {
+  return [
+    ...state.members.map((member) => ({ ...member, isGuest: false })),
+    ...getMatchInfo().guests.map((guest) => ({
+      ...guest,
+      number: guest.number || "",
+      position: "용병",
+      isGuest: true,
+    })),
+  ];
 }
 
 function countByPlayer(events) {
@@ -196,8 +271,9 @@ function getMemberStats(memberId) {
 
 function renderAll() {
   ensureQuarterData();
-  syncRecordDraftWithMembers();
+  syncRecordDraftWithPlayers();
   renderTeam();
+  renderMatchPrep();
   renderFormation();
   renderRecords();
 }
@@ -303,6 +379,26 @@ function renderRecentMatch(memberId, match) {
   `;
 }
 
+function renderMatchPrep() {
+  const matchInfo = getMatchInfo();
+  dom.prepDateInput.value = matchInfo.date || "";
+  dom.prepOpponentInput.value = matchInfo.opponent || "";
+  dom.prepTitleInput.value = matchInfo.title || "";
+
+  dom.formationParticipantList.innerHTML = state.members.length
+    ? state.members
+        .map(
+          (member) => `
+            <label class="prep-check">
+              <input type="checkbox" value="${member.id}" data-prep-participant ${matchInfo.participantIds.includes(member.id) ? "checked" : ""} />
+              ${escapeHtml(member.name)}
+            </label>
+          `,
+        )
+        .join("")
+    : `<p class="empty-text">나의 팀 화면에서 팀원을 먼저 추가해 주세요.</p>`;
+}
+
 function renderFormation() {
   dom.quarterCountSelect.value = String(state.formation.quarters);
   dom.formationSelect.value = state.formation.shape;
@@ -317,7 +413,6 @@ function renderFormation() {
 
   renderSquadBoard();
   renderPlayerPool();
-  renderSharePreview();
 }
 
 function renderSquadBoard() {
@@ -337,22 +432,20 @@ function renderSquadBoard() {
     slots
       .map((slot) => {
         const savedSlot = quarterData.slots[slot.id] || {};
-        const player = getMemberById(savedSlot.playerId);
-        const playerName = player ? player.name : "선수 드롭";
-        const playerMeta = player ? `#${player.number || "-"} · ${player.position || "포지션 미정"}` : "드래그해서 배치";
+        const player = getPlayerById(savedSlot.playerId);
+        const playerName = player ? player.name : "-";
+        const playerMeta = player ? `#${player.number || "-"}` : "";
         const emptyClass = player ? "" : " empty";
+        const noteTitle = savedSlot.note ? `메모: ${savedSlot.note}` : "메모";
+        const noteClass = savedSlot.note ? " has-note" : "";
         return `
           <div class="position-slot" data-slot-id="${slot.id}" style="--x:${slot.x}%; --y:${slot.y}%;">
             <div class="slot-label">${slot.label}</div>
             <div class="slot-player${emptyClass}">
               <strong>${escapeHtml(playerName)}</strong>
-              <span>${escapeHtml(playerMeta)}</span>
+              ${playerMeta ? `<span>${escapeHtml(playerMeta)}</span>` : ""}
             </div>
-            <input data-slot-note="${slot.id}" type="text" value="${escapeHtml(savedSlot.note || "")}" placeholder="메모" aria-label="${slot.label} 메모" />
-            <select class="slot-select" data-slot-player="${slot.id}" aria-label="${slot.label} 선수 선택">
-              <option value="">보조 선택</option>
-              ${state.members.map((member) => `<option value="${member.id}" ${savedSlot.playerId === member.id ? "selected" : ""}>${escapeHtml(member.name)}</option>`).join("")}
-            </select>
+            <button class="slot-note-button${noteClass}" type="button" data-slot-note-open="${slot.id}" title="${escapeHtml(noteTitle)}" aria-label="${slot.label} 메모">+</button>
           </div>
         `;
       })
@@ -360,10 +453,11 @@ function renderSquadBoard() {
 }
 
 function renderPlayerPool() {
-  if (!state.members.length) {
+  const players = getFormationPlayers();
+  if (!players.length) {
     dom.playerPoolPanel.innerHTML = `
-      <h3>선수 목록</h3>
-      <p class="empty-text">나의 팀 화면에서 팀원을 먼저 추가해 주세요.</p>
+      <h3>출전 선수</h3>
+      <p class="empty-text">경기 준비에서 출전 선수를 선택해 주세요.</p>
     `;
     return;
   }
@@ -375,19 +469,19 @@ function renderPlayerPool() {
   );
 
   dom.playerPoolPanel.innerHTML = `
-    <h3>선수 목록</h3>
+    <div class="player-pool-header">
+      <h3>출전 선수</h3>
+    </div>
     <div class="player-pool-list">
-      ${state.members
-        .map((member) => {
-          const placedClass = placedIds.has(member.id) ? " placed" : "";
-          const badge = member.isMercenary ? `<span class="badge">용병</span>` : "";
+      ${players
+        .map((player) => {
+          const placedClass = placedIds.has(player.id) ? " placed" : "";
           return `
-            <article class="player-pool-card${placedClass}" draggable="true" data-drag-member-id="${member.id}">
+            <article class="player-pool-card${placedClass}" draggable="true" data-drag-player-id="${player.id}">
               <div class="player-pool-name">
-                <span>${escapeHtml(member.name)}</span>
-                ${badge}
+                <span>${escapeHtml(player.name)}</span>
               </div>
-              <div class="player-pool-meta">#${escapeHtml(member.number || "-")} · ${escapeHtml(member.position || "포지션 미정")}</div>
+              <div class="player-pool-meta">${player.isGuest ? "용병" : `#${escapeHtml(player.number || "-")} · ${escapeHtml(player.position || "포지션 미정")}`}</div>
             </article>
           `;
         })
@@ -396,45 +490,34 @@ function renderPlayerPool() {
   `;
 }
 
-function renderSharePreview() {
-  const text = getShareText();
-  dom.sharePreview.textContent = text;
-}
-
-function getShareText() {
-  const quarter = state.formation.activeQuarter;
-  const quarterData = state.formation.squads[quarter] || { slots: {} };
-  const header = `[조축로그] ${state.team.name || "나의 팀"} ${quarter}쿼터 스쿼드`;
-  const lines = FORMATIONS[state.formation.shape].map((slot) => {
-    const savedSlot = quarterData.slots[slot.id] || {};
-    const playerName = savedSlot.playerId ? getMemberName(savedSlot.playerId) : "미배치";
-    const note = savedSlot.note ? savedSlot.note : "-";
-    return `${slot.label} - ${playerName} / 메모: ${note}`;
-  });
-
-  return `${header}\n포메이션: ${state.formation.shape}\n\n${lines.join("\n")}`;
-}
-
 function renderRecords() {
+  hydrateRecordDraftFromFormation();
   if (!dom.matchDateInput.value) {
-    dom.matchDateInput.value = new Date().toISOString().slice(0, 10);
+    dom.matchDateInput.value = getMatchInfo().date || new Date().toISOString().slice(0, 10);
+  }
+  if (!dom.matchTitleInput.value && getMatchInfo().title) {
+    dom.matchTitleInput.value = getMatchInfo().title;
+  }
+  if (!dom.matchMemoInput.value && getMatchInfo().opponent) {
+    dom.matchMemoInput.value = getMatchInfo().opponent;
   }
 
-  dom.appearanceList.innerHTML = state.members.length
-    ? state.members
+  const recordPlayers = getRecordPlayers();
+  dom.appearanceList.innerHTML = recordPlayers.length
+    ? recordPlayers
         .map(
-          (member) => `
+          (player) => `
             <label class="check-item">
-              <input type="checkbox" value="${member.id}" ${recordDraft.participants.has(member.id) ? "checked" : ""} />
-              ${escapeHtml(member.name)}
+              <input type="checkbox" value="${player.id}" ${recordDraft.participants.has(player.id) ? "checked" : ""} />
+              ${escapeHtml(player.name)}
             </label>
           `,
         )
         .join("")
     : `<p class="empty-text">팀원을 먼저 등록해 주세요.</p>`;
 
-  const selectOptions = `<option value="">선수 선택</option>${state.members
-    .map((member) => `<option value="${member.id}">${escapeHtml(member.name)}</option>`)
+  const selectOptions = `<option value="">선수 선택</option>${recordPlayers
+    .map((player) => `<option value="${player.id}">${escapeHtml(player.name)}</option>`)
     .join("")}`;
   dom.goalSelect.innerHTML = selectOptions;
   dom.assistSelect.innerHTML = selectOptions;
@@ -463,9 +546,9 @@ function renderMatchList() {
     .slice()
     .reverse()
     .map((match) => {
-      const participants = (match.participants || []).map(getMemberName).join(", ") || "-";
-      const goals = formatEventSummary(match.goals || [], "골");
-      const assists = formatEventSummary(match.assists || [], "도움");
+      const participants = (match.participants || []).map((playerId) => getPlayerName(playerId, match)).join(", ") || "-";
+      const goals = formatEventSummary(match.goals || [], "골", match);
+      const assists = formatEventSummary(match.assists || [], "도움", match);
       return `
         <article class="match-card">
           <h4>${escapeHtml(match.title)}</h4>
@@ -479,19 +562,27 @@ function renderMatchList() {
     .join("");
 }
 
-function formatEventSummary(events, unit) {
+function formatEventSummary(events, unit, match = null) {
   if (!events.length) return "-";
   const counts = countByPlayer(events);
   return Object.entries(counts)
-    .map(([playerId, count]) => `${getMemberName(playerId)} ${count}${unit}`)
+    .map(([playerId, count]) => `${getPlayerName(playerId, match)} ${count}${unit}`)
     .join(", ");
 }
 
-function syncRecordDraftWithMembers() {
-  const memberIds = new Set(state.members.map((member) => member.id));
-  recordDraft.participants = new Set([...recordDraft.participants].filter((id) => memberIds.has(id)));
-  recordDraft.goals = recordDraft.goals.filter((event) => memberIds.has(event.playerId));
-  recordDraft.assists = recordDraft.assists.filter((event) => memberIds.has(event.playerId));
+function hydrateRecordDraftFromFormation() {
+  if (recordDraft.hydratedFromFormation || recordDraft.participants.size) return;
+  const playerIds = getFormationPlayers().map((player) => player.id);
+  if (!playerIds.length) return;
+  recordDraft.participants = new Set(playerIds);
+  recordDraft.hydratedFromFormation = true;
+}
+
+function syncRecordDraftWithPlayers() {
+  const playerIds = new Set(getRecordPlayers().map((player) => player.id));
+  recordDraft.participants = new Set([...recordDraft.participants].filter((id) => playerIds.has(id)));
+  recordDraft.goals = recordDraft.goals.filter((event) => playerIds.has(event.playerId));
+  recordDraft.assists = recordDraft.assists.filter((event) => playerIds.has(event.playerId));
 }
 
 function addMember({ name, number, position, isMercenary = false }) {
@@ -509,6 +600,8 @@ function addMember({ name, number, position, isMercenary = false }) {
 
 function deleteMember(memberId) {
   state.members = state.members.filter((member) => member.id !== memberId);
+  const matchInfo = getMatchInfo();
+  matchInfo.participantIds = matchInfo.participantIds.filter((id) => id !== memberId);
   Object.values(state.formation.squads).forEach((quarterData) => {
     Object.values(quarterData.slots || {}).forEach((slot) => {
       if (slot.playerId === memberId) slot.playerId = "";
@@ -519,13 +612,32 @@ function deleteMember(memberId) {
   renderAll();
 }
 
-function addMercenary() {
-  const nextNumber = state.members.filter((member) => member.isMercenary).length + 1;
-  addMember({
+function addGuest() {
+  const matchInfo = getMatchInfo();
+  const nextNumber = matchInfo.guests.length + 1;
+  const guest = {
+    id: uid("guest"),
     name: `용병${nextNumber}`,
-    number: "-",
+    number: "",
     position: "용병",
-    isMercenary: true,
+    isGuest: true,
+  };
+  matchInfo.guests.push(guest);
+  recordDraft.participants.add(guest.id);
+  recordDraft.hydratedFromFormation = true;
+  saveState();
+  renderAll();
+  setFormationNotice(`용병${nextNumber} 선수를 추가했습니다.`);
+}
+
+function cleanFormationSlotsForAvailablePlayers() {
+  const availableIds = new Set(getFormationPlayers().map((player) => player.id));
+  Object.values(state.formation.squads).forEach((quarterData) => {
+    Object.values(quarterData.slots || {}).forEach((slot) => {
+      if (slot.playerId && !availableIds.has(slot.playerId)) {
+        slot.playerId = "";
+      }
+    });
   });
 }
 
@@ -535,19 +647,18 @@ function updateSquadSlot(slotId, patch) {
   quarterData.slots[slotId] = { ...(quarterData.slots[slotId] || {}), ...patch };
   state.formation.squads[quarter] = quarterData;
   saveState();
-  renderSharePreview();
 }
 
-function placePlayerInSlot(slotId, memberId) {
-  if (!getMemberById(memberId)) return;
-  const duplicates = getDuplicateSlotLabels(memberId, slotId);
-  updateSquadSlot(slotId, { playerId: memberId });
+function placePlayerInSlot(slotId, playerId) {
+  if (!getFormationPlayers().some((player) => player.id === playerId)) return;
+  const duplicates = getDuplicateSlotLabels(playerId, slotId);
+  updateSquadSlot(slotId, { playerId });
   renderFormation();
 
   if (duplicates.length) {
-    setFormationNotice(`${getMemberName(memberId)} 선수는 이미 ${duplicates.join(", ")}에도 배치되어 있습니다.`, true);
+    setFormationNotice(`${getPlayerName(playerId)} 선수는 이미 ${duplicates.join(", ")}에도 배치되어 있습니다.`, true);
   } else {
-    setFormationNotice(`${getMemberName(memberId)} 선수를 배치했습니다.`);
+    setFormationNotice(`${getPlayerName(playerId)} 선수를 배치했습니다.`);
   }
 }
 
@@ -585,14 +696,46 @@ function saveMatch(event) {
     participants: [...recordDraft.participants],
     goals: recordDraft.goals,
     assists: recordDraft.assists,
+    guests: getMatchInfo().guests.filter((guest) => {
+      const inParticipants = recordDraft.participants.has(guest.id);
+      const inGoals = recordDraft.goals.some((eventItem) => eventItem.playerId === guest.id);
+      const inAssists = recordDraft.assists.some((eventItem) => eventItem.playerId === guest.id);
+      return inParticipants || inGoals || inAssists;
+    }),
     createdAt: new Date().toISOString(),
   });
 
-  recordDraft = { participants: new Set(), goals: [], assists: [] };
+  recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
   dom.recordForm.reset();
   dom.matchDateInput.value = new Date().toISOString().slice(0, 10);
   saveState();
   renderAll();
+}
+
+function openMemoModal(slotId) {
+  activeMemoSlotId = slotId;
+  const slot = FORMATIONS[state.formation.shape].find((item) => item.id === slotId);
+  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  const savedSlot = quarterData.slots[slotId] || {};
+  dom.memoModalTitle.textContent = `${state.formation.activeQuarter}쿼터 ${slot?.label || ""} 메모`;
+  dom.slotMemoInput.value = savedSlot.note || "";
+  dom.slotMemoModal.classList.remove("hidden");
+  dom.slotMemoModal.setAttribute("aria-hidden", "false");
+  dom.slotMemoInput.focus();
+}
+
+function closeMemoModal() {
+  activeMemoSlotId = null;
+  dom.slotMemoModal.classList.add("hidden");
+  dom.slotMemoModal.setAttribute("aria-hidden", "true");
+}
+
+function saveMemo() {
+  if (!activeMemoSlotId) return;
+  updateSquadSlot(activeMemoSlotId, { note: dom.slotMemoInput.value.trim() });
+  closeMemoModal();
+  renderFormation();
+  setFormationNotice("메모가 저장되었습니다.");
 }
 
 async function copyFormationImage() {
@@ -717,8 +860,6 @@ function bindEvents() {
     dom.memberForm.reset();
   });
 
-  dom.addMercenaryButton.addEventListener("click", addMercenary);
-
   dom.membersGrid.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("[data-delete-member]");
     if (deleteButton) {
@@ -732,6 +873,39 @@ function bindEvents() {
     selectedMemberId = card.dataset.memberId;
     renderTeam();
   });
+
+  dom.prepDateInput.addEventListener("input", () => {
+    getMatchInfo().date = dom.prepDateInput.value;
+    saveState();
+  });
+
+  dom.prepOpponentInput.addEventListener("input", () => {
+    getMatchInfo().opponent = dom.prepOpponentInput.value.trim();
+    saveState();
+  });
+
+  dom.prepTitleInput.addEventListener("input", () => {
+    getMatchInfo().title = dom.prepTitleInput.value.trim();
+    saveState();
+  });
+
+  dom.formationParticipantList.addEventListener("change", (event) => {
+    const checkbox = event.target.closest("[data-prep-participant]");
+    if (!checkbox) return;
+    const matchInfo = getMatchInfo();
+    if (checkbox.checked) {
+      matchInfo.participantIds = [...new Set([...matchInfo.participantIds, checkbox.value])];
+    } else {
+      matchInfo.participantIds = matchInfo.participantIds.filter((id) => id !== checkbox.value);
+    }
+    cleanFormationSlotsForAvailablePlayers();
+    recordDraft.participants = new Set(getFormationPlayers().map((player) => player.id));
+    recordDraft.hydratedFromFormation = true;
+    saveState();
+    renderAll();
+  });
+
+  dom.addGuestButton.addEventListener("click", addGuest);
 
   dom.quarterCountSelect.addEventListener("change", () => {
     state.formation.quarters = clamp(Number(dom.quarterCountSelect.value), 1, MAX_QUARTERS);
@@ -767,18 +941,6 @@ function bindEvents() {
     renderFormation();
   });
 
-  dom.squadBoard.addEventListener("change", (event) => {
-    const select = event.target.closest("[data-slot-player]");
-    if (!select) return;
-    if (select.value) {
-      placePlayerInSlot(select.dataset.slotPlayer, select.value);
-      return;
-    }
-    updateSquadSlot(select.dataset.slotPlayer, { playerId: "" });
-    renderFormation();
-    setFormationNotice("슬롯 배치를 비웠습니다.");
-  });
-
   dom.squadBoard.addEventListener("dragover", (event) => {
     const slot = event.target.closest("[data-slot-id]");
     if (!slot) return;
@@ -797,42 +959,37 @@ function bindEvents() {
     const slot = event.target.closest("[data-slot-id]");
     if (!slot) return;
     event.preventDefault();
-    const memberId = event.dataTransfer.getData("text/plain");
+    const playerId = event.dataTransfer.getData("text/plain");
     clearDragOverSlots();
-    placePlayerInSlot(slot.dataset.slotId, memberId);
+    placePlayerInSlot(slot.dataset.slotId, playerId);
   });
 
   dom.playerPoolPanel.addEventListener("dragstart", (event) => {
-    const card = event.target.closest("[data-drag-member-id]");
+    const card = event.target.closest("[data-drag-player-id]");
     if (!card) return;
-    event.dataTransfer.setData("text/plain", card.dataset.dragMemberId);
+    event.dataTransfer.setData("text/plain", card.dataset.dragPlayerId);
     event.dataTransfer.effectAllowed = "copy";
     card.classList.add("dragging");
   });
 
   dom.playerPoolPanel.addEventListener("dragend", (event) => {
-    const card = event.target.closest("[data-drag-member-id]");
+    const card = event.target.closest("[data-drag-player-id]");
     if (card) card.classList.remove("dragging");
     clearDragOverSlots();
   });
 
-  dom.squadBoard.addEventListener("input", (event) => {
-    const input = event.target.closest("[data-slot-note]");
-    if (!input) return;
-    updateSquadSlot(input.dataset.slotNote, { note: input.value });
+  dom.squadBoard.addEventListener("click", (event) => {
+    const button = event.target.closest("[data-slot-note-open]");
+    if (!button) return;
+    openMemoModal(button.dataset.slotNoteOpen);
   });
 
   dom.copyImageButton.addEventListener("click", copyFormationImage);
 
-  dom.copyShareButton.addEventListener("click", async () => {
-    const text = getShareText();
-    try {
-      await navigator.clipboard.writeText(text);
-      dom.copyStatus.textContent = "공유용 텍스트가 복사되었습니다.";
-    } catch {
-      fallbackCopy(text);
-      dom.copyStatus.textContent = "공유용 텍스트가 복사되었습니다.";
-    }
+  dom.closeMemoButton.addEventListener("click", closeMemoModal);
+  dom.saveMemoButton.addEventListener("click", saveMemo);
+  dom.slotMemoModal.addEventListener("click", (event) => {
+    if (event.target === dom.slotMemoModal) closeMemoModal();
   });
 
   dom.appearanceList.addEventListener("change", (event) => {
@@ -860,18 +1017,6 @@ function bindEvents() {
   });
 
   dom.recordForm.addEventListener("submit", saveMatch);
-}
-
-function fallbackCopy(text) {
-  const textarea = document.createElement("textarea");
-  textarea.value = text;
-  textarea.setAttribute("readonly", "");
-  textarea.style.position = "fixed";
-  textarea.style.left = "-9999px";
-  document.body.appendChild(textarea);
-  textarea.select();
-  document.execCommand("copy");
-  textarea.remove();
 }
 
 bindEvents();
