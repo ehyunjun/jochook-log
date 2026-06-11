@@ -81,6 +81,7 @@ const dom = {
   squadBoard: $("#squadBoard"),
   playerPoolPanel: $("#playerPoolPanel"),
   copyImageButton: $("#copyImageButton"),
+  resetFormationButton: $("#resetFormationButton"),
   slotMemoModal: $("#slotMemoModal"),
   memoModalTitle: $("#memoModalTitle"),
   slotMemoInput: $("#slotMemoInput"),
@@ -769,6 +770,16 @@ function placePlayerInSlot(slotId, playerId) {
   }
 }
 
+function resetCurrentQuarterFormation() {
+  if (!confirm("현재 쿼터의 포메이션과 메모를 초기화할까요?")) return;
+  const quarter = state.formation.activeQuarter;
+  state.formation.squads[quarter] = { slots: {} };
+  selectedPoolPlayerId = null;
+  saveState();
+  renderFormation();
+  setFormationNotice(`${quarter}쿼터 포메이션을 초기화했습니다.`);
+}
+
 function getDuplicateSlotLabels(memberId, nextSlotId) {
   const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
   return FORMATIONS[state.formation.shape]
@@ -1194,6 +1205,7 @@ function bindEvents() {
   });
 
   dom.copyImageButton.addEventListener("click", copyFormationImage);
+  dom.resetFormationButton.addEventListener("click", resetCurrentQuarterFormation);
 
   dom.closeMemoButton.addEventListener("click", closeMemoModal);
   dom.saveMemoButton.addEventListener("click", saveMemo);

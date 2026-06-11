@@ -295,6 +295,18 @@ main {
   color: var(--green-dark);
 }
 
+.danger-soft-button {
+  border: 1px solid rgba(199, 66, 50, 0.34);
+  background: #fff7f5;
+  color: var(--danger);
+}
+
+.danger-soft-button:hover {
+  border-color: rgba(199, 66, 50, 0.72);
+  background: #ffe8e3;
+  color: var(--danger);
+}
+
 .team-shell {
   display: grid;
   grid-template-columns: 280px 1fr;
@@ -569,6 +581,20 @@ main {
 
 .formation-notice.warning {
   color: var(--danger);
+}
+
+.formation-toolbar {
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+  align-items: center;
+  margin: 0 0 10px;
+}
+
+.formation-toolbar button {
+  min-height: 36px;
+  padding: 0 12px;
+  font-size: 0.9rem;
 }
 
 .formation-workspace {
@@ -1143,6 +1169,19 @@ main {
 
   .formation-workspace {
     gap: 12px;
+  }
+
+  .formation-toolbar {
+    justify-content: flex-end;
+    gap: 6px;
+    margin-bottom: 8px;
+  }
+
+  .formation-toolbar button {
+    flex: 0 0 auto;
+    min-height: 34px;
+    padding: 0 10px;
+    font-size: 0.84rem;
   }
 
   .field-wrap {
