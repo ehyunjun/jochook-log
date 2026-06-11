@@ -121,9 +121,9 @@ const FORMATIONS = {
     { id: "cb", label: "CB", x: 50, y: 78 },
     { id: "rcb", label: "RCB", x: 70, y: 75 },
     { id: "lm", label: "LM", x: 15, y: 53 },
-    { id: "lcm", label: "LCM", x: 36, y: 56 },
-    { id: "cm", label: "CM", x: 50, y: 50 },
-    { id: "rcm", label: "RCM", x: 64, y: 56 },
+    { id: "lcm", label: "LCM", x: 32, y: 56 },
+    { id: "cm", label: "CM", x: 50, y: 46 },
+    { id: "rcm", label: "RCM", x: 68, y: 56 },
     { id: "rm", label: "RM", x: 85, y: 53 },
     { id: "ls", label: "LS", x: 40, y: 22 },
     { id: "rs", label: "RS", x: 60, y: 22 },
@@ -148,9 +148,9 @@ const FORMATIONS = {
     { id: "cb", label: "CB", x: 50, y: 79 },
     { id: "rcb", label: "RCB", x: 68, y: 76 },
     { id: "rwb", label: "RWB", x: 88, y: 70 },
-    { id: "lcm", label: "LCM", x: 36, y: 53 },
-    { id: "cm", label: "CM", x: 50, y: 48 },
-    { id: "rcm", label: "RCM", x: 64, y: 53 },
+    { id: "lcm", label: "LCM", x: 30, y: 54 },
+    { id: "cm", label: "CM", x: 50, y: 46 },
+    { id: "rcm", label: "RCM", x: 70, y: 54 },
     { id: "ls", label: "LS", x: 40, y: 22 },
     { id: "rs", label: "RS", x: 60, y: 22 },
   ],
@@ -636,6 +636,9 @@ function setActiveTab(tabId) {
   dom.tabPanels.forEach((panel) => {
     panel.classList.toggle("active", panel.id === tabId);
   });
+  if (tabId === "formation") {
+    requestAnimationFrame(syncPlayerPoolHeight);
+  }
 }
 
 function renderTeam() {
@@ -784,6 +787,7 @@ function renderFormation() {
   renderBoardHeader();
   renderSquadBoard();
   renderPlayerPool();
+  requestAnimationFrame(syncPlayerPoolHeight);
 }
 
 function renderBoardHeader() {
@@ -875,6 +879,28 @@ function renderPlayerPool() {
     </div>
     <button class="secondary-button add-guest-panel-button" type="button" data-add-guest>용병 추가</button>
   `;
+}
+
+function syncPlayerPoolHeight() {
+  const fieldPanel = document.querySelector(".field-panel");
+  if (!fieldPanel || !dom.playerPoolPanel) return;
+
+  const isDesktop = window.matchMedia("(min-width: 1025px)").matches;
+  if (!isDesktop) {
+    dom.playerPoolPanel.style.height = "";
+    dom.playerPoolPanel.style.maxHeight = "";
+    return;
+  }
+
+  const height = fieldPanel.offsetHeight;
+  if (!height) {
+    dom.playerPoolPanel.style.height = "";
+    dom.playerPoolPanel.style.maxHeight = "";
+    return;
+  }
+
+  dom.playerPoolPanel.style.height = `${height}px`;
+  dom.playerPoolPanel.style.maxHeight = `${height}px`;
 }
 
 function renderRecords() {
@@ -1692,6 +1718,7 @@ function bindEvents() {
   const isTouchDevice = window.matchMedia("(hover: none), (pointer: coarse)").matches;
 
   dom.squadBoard.addEventListener(isTouchDevice ? "pointerup" : "click", handleSquadBoardTap);
+  window.addEventListener("resize", syncPlayerPoolHeight);
 
   dom.copyImageButton.addEventListener("click", copyFormationImage);
   dom.saveFormationMatchButton.addEventListener("click", saveFormationMatch);
