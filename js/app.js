@@ -470,10 +470,9 @@ function renderMemberDetail() {
       ${statPill(stats.assists, "총 도움")}
     </div>
     <h3>최근 경기 기록</h3>
-    ${
-      recentMatches.length
-        ? `<ul class="recent-list">${recentMatches.map((match) => renderRecentMatch(member.id, match)).join("")}</ul>`
-        : `<p class="empty-text">아직 기록된 경기가 없습니다.</p>`
+    ${recentMatches.length
+      ? `<ul class="recent-list">${recentMatches.map((match) => renderRecentMatch(member.id, match)).join("")}</ul>`
+      : `<p class="empty-text">아직 기록된 경기가 없습니다.</p>`
     }
   `;
 }
@@ -501,15 +500,15 @@ function renderMatchPrep() {
 
   dom.formationParticipantList.innerHTML = state.members.length
     ? sortByName(state.members)
-        .map(
-          (member) => `
+      .map(
+        (member) => `
             <label class="prep-check">
               <input type="checkbox" value="${member.id}" data-prep-participant ${matchInfo.participantIds.includes(member.id) ? "checked" : ""} />
               ${escapeHtml(member.name)}
             </label>
           `,
-        )
-        .join("")
+      )
+      .join("")
     : `<p class="empty-text">나의 팀 화면에서 팀원을 먼저 추가해 주세요.</p>`;
 }
 
@@ -586,18 +585,18 @@ function renderPlayerPool() {
   }
   const playerListMarkup = unplacedPlayers.length
     ? unplacedPlayers
-        .map((player) => {
-          const selectedClass = player.id === selectedPoolPlayerId ? " selected" : "";
-          const meta = player.isGuest ? "용병" : playerMetaText(player);
-          const guestActions = player.isGuest
-            ? `
+      .map((player) => {
+        const selectedClass = player.id === selectedPoolPlayerId ? " selected" : "";
+        const meta = player.isGuest ? "용병" : playerMetaText(player);
+        const guestActions = player.isGuest
+          ? `
               <div class="guest-actions">
                 <button class="secondary-button" type="button" data-edit-guest="${player.id}">수정</button>
                 <button class="delete-guest-button" type="button" data-delete-guest="${player.id}">삭제</button>
               </div>
             `
-            : "";
-          return `
+          : "";
+        return `
             <article class="player-pool-card${player.isGuest ? " guest-card" : ""}${selectedClass}" draggable="true" data-drag-player-id="${player.id}" tabindex="0">
               <div class="player-pool-name">
                 <span>${escapeHtml(player.name)}</span>
@@ -606,8 +605,8 @@ function renderPlayerPool() {
               ${guestActions}
             </article>
           `;
-        })
-        .join("")
+      })
+      .join("")
     : `<p class="empty-text">${players.length ? "모든 후보선수가 배치되었습니다." : "경기 준비에서 출전 선수를 선택해 주세요."}</p>`;
 
   dom.playerPoolPanel.innerHTML = `
@@ -636,15 +635,15 @@ function renderRecords() {
   const recordPlayers = getRecordPlayers();
   dom.appearanceList.innerHTML = recordPlayers.length
     ? recordPlayers
-        .map(
-          (player) => `
+      .map(
+        (player) => `
             <label class="check-item">
               <input type="checkbox" value="${player.id}" ${recordDraft.participants.has(player.id) ? "checked" : ""} />
               ${escapeHtml(player.name)}
             </label>
           `,
-        )
-        .join("")
+      )
+      .join("")
     : `<p class="empty-text">팀원을 먼저 등록해 주세요.</p>`;
 
   const selectOptions = `<option value="">선수 선택</option>${recordPlayers
@@ -682,8 +681,13 @@ function renderMatchList() {
       const assists = formatEventSummary(match.assists || [], "도움", match);
       return `
         <article class="match-card">
-          <h4>${escapeHtml(match.title)}</h4>
-          <p class="match-meta">${escapeHtml(match.date || "-")} · ${escapeHtml(match.memo || "메모 없음")}</p>
+          <div class="match-card-header">
+            <div>
+              <h4>${escapeHtml(match.title)}</h4>
+              <p class="match-meta">${escapeHtml(match.date || "-")} · ${escapeHtml(match.memo || "메모 없음")}</p>
+            </div>
+            <button class="delete-match-button" type="button" data-delete-match="${match.id}">삭제</button>
+          </div>
           <p><strong>출전 선수</strong> ${escapeHtml(participants)}</p>
           <p><strong>득점 기록</strong> ${escapeHtml(goals)}</p>
           <p><strong>어시스트 기록</strong> ${escapeHtml(assists)}</p>
@@ -926,6 +930,18 @@ function saveMatch(event) {
     }),
     createdAt: new Date().toISOString(),
   });
+
+  function deleteMatch(matchId) {
+    const match = state.matches.find((item) => item.id === matchId);
+    if (!match) return;
+
+    if (!confirm(`"${match.title}" 경기 기록을 삭제할까요?`)) return;
+
+    state.matches = state.matches.filter((item) => item.id !== matchId);
+
+    saveState();
+    renderAll();
+  }
 
   recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
   dom.recordForm.reset();
@@ -1306,6 +1322,13 @@ function bindEvents() {
     recordDraft.assists.push({ playerId: dom.assistSelect.value });
     dom.assistSelect.value = "";
     renderDraftLists();
+  });
+
+  dom.matchList.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-delete-match]");
+    if (!deleteButton) return;
+
+    deleteMatch(deleteButton.dataset.deleteMatch);
   });
 
   dom.recordForm.addEventListener("submit", saveMatch);

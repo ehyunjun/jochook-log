@@ -1129,6 +1129,7 @@ main {
 }
 
 @media (max-width: 900px) {
+
   .start-layout,
   .team-shell,
   .content-grid,
@@ -1342,5 +1343,141 @@ main {
   .guest-actions {
     opacity: 1;
     pointer-events: auto;
+  }
+}
+
+/* 데스크톱/태블릿 후보선수 목록 2열 압축 */
+.player-pool-list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+}
+
+.player-pool-card {
+  gap: 4px;
+  min-height: 58px;
+  padding: 9px 10px;
+  border-radius: 7px;
+}
+
+.player-pool-card.guest-card {
+  padding-right: 58px;
+}
+
+.player-pool-name {
+  min-width: 0;
+  font-size: 0.92rem;
+  line-height: 1.25;
+}
+
+.player-pool-name span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.player-pool-meta {
+  font-size: 0.74rem;
+  line-height: 1.2;
+}
+
+.guest-actions {
+  top: 6px;
+  right: 6px;
+  gap: 4px;
+}
+
+.guest-actions button {
+  min-height: 22px;
+  padding: 0 5px;
+  font-size: 0.64rem;
+}
+
+.add-guest-panel-button {
+  min-height: 36px;
+  font-size: 0.88rem;
+}
+
+/* 후보선수 패널이 너무 길어질 때 보드와 높이 균형 맞추기 */
+@media (min-width: 1025px) {
+  .player-pool-panel {
+    align-self: start;
+  }
+
+  .player-pool-list {
+    max-height: 560px;
+    overflow-y: auto;
+    padding-right: 2px;
+  }
+}
+
+/* 태블릿에서도 2열 유지 */
+@media (min-width: 641px) and (max-width: 1024px) {
+  .player-pool-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .player-pool-card {
+    min-height: 56px;
+    padding: 9px;
+  }
+}
+
+/* 모바일 기존 2열 유지 + 너무 작아지지 않게 보정 */
+@media (max-width: 640px) {
+  .player-pool-list {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 8px;
+  }
+
+  .player-pool-card {
+    min-height: 56px;
+    padding: 9px;
+  }
+
+  .player-pool-card.guest-card {
+    padding-right: 56px;
+  }
+
+  .player-pool-name {
+    font-size: 0.9rem;
+  }
+
+  .player-pool-meta {
+    font-size: 0.72rem;
+  }
+}
+
+.match-card-header {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  align-items: start;
+}
+
+.delete-match-button {
+  flex: 0 0 auto;
+  min-height: 30px;
+  padding: 0 10px;
+  border: 1px solid rgba(199, 66, 50, 0.34);
+  background: #fff7f5;
+  color: var(--danger);
+  font-size: 0.78rem;
+}
+
+.delete-match-button:hover {
+  border-color: rgba(199, 66, 50, 0.72);
+  background: var(--danger);
+  color: #fff;
+}
+
+@media (max-width: 640px) {
+  .match-card-header {
+    align-items: stretch;
+  }
+
+  .delete-match-button {
+    min-height: 28px;
+    padding: 0 8px;
   }
 }
