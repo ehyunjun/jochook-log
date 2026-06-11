@@ -169,8 +169,9 @@
         <div class="quarter-tabs" id="quarterTabs" aria-label="쿼터 선택"></div>
         <p class="helper-text formation-notice" id="formationNotice"></p>
 
-        <div class="formation-toolbar" aria-label="포메이션 공유 작업">
+        <div class="formation-toolbar" aria-label="포메이션 작업">
           <button class="secondary-button" type="button" id="copyImageButton">이미지 공유/저장</button>
+          <button class="danger-soft-button" type="button" id="resetFormationButton">초기화</button>
         </div>
 
         <div id="formationCaptureArea" class="formation-workspace">
@@ -184,11 +185,8 @@
           <aside class="player-pool-panel" id="playerPoolPanel" aria-label="후보선수 목록"></aside>
         </div>
 
-        <div class="formation-bottom-actions">
-          <div class="formation-bottom-actions-inner">
-            <button type="button" id="saveFormationMatchButton">저장하기</button>
-            <button class="danger-soft-button" type="button" id="resetFormationButton">초기화</button>
-          </div>
+        <div class="formation-save-row">
+          <button type="button" id="saveFormationMatchButton">저장하기</button>
         </div>
 
         <div class="memo-modal hidden" id="slotMemoModal" aria-hidden="true">
