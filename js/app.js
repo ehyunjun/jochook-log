@@ -1322,7 +1322,7 @@ function saveMemo() {
 
 async function copyFormationImage() {
   if (!window.html2canvas) {
-    setFormationNotice("이미지 복사 라이브러리를 불러오지 못했습니다.", true);
+    setFormationNotice("이미지 공유에 실패했습니다. 다시 시도해 주세요.", true);
     return;
   }
 
@@ -1336,24 +1336,61 @@ async function copyFormationImage() {
     setFormationNotice("포메이션 이미지를 만드는 중입니다.");
     const canvas = await window.html2canvas(dom.formationCaptureArea, captureOptions);
     const blob = await canvasToBlob(canvas);
+    const fileName = getFormationImageFileName();
+    const file = typeof File === "function" ? new File([blob], fileName, { type: "image/png" }) : null;
+    const canShareFile = Boolean(
+      file &&
+      navigator.share &&
+      navigator.canShare?.({ files: [file] }),
+    );
+    const prefersShare = window.matchMedia("(max-width: 900px), (hover: none), (pointer: coarse)").matches;
+    let shareAttempted = false;
+
+    if (canShareFile && prefersShare) {
+      shareAttempted = true;
+      if (await shareFormationFile(file)) {
+        return;
+      }
+    }
 
     if (navigator.clipboard?.write && "ClipboardItem" in window) {
-      await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
-      setFormationNotice("포메이션 이미지가 클립보드에 복사되었습니다.");
+      try {
+        await navigator.clipboard.write([new ClipboardItem({ "image/png": blob })]);
+        setFormationNotice("포메이션 이미지가 클립보드에 복사되었습니다.");
+        return;
+      } catch (error) {
+        console.error(error);
+      }
+    }
+
+    if (canShareFile && !shareAttempted && await shareFormationFile(file)) {
       return;
     }
 
     downloadBlob(blob);
-    setFormationNotice("브라우저에서 이미지 복사를 지원하지 않아 파일로 저장합니다.", true);
-  } catch {
-    try {
-      const canvas = await window.html2canvas(dom.formationCaptureArea, captureOptions);
-      const blob = await canvasToBlob(canvas);
-      downloadBlob(blob);
-      setFormationNotice("브라우저에서 이미지 복사를 지원하지 않아 파일로 저장합니다.", true);
-    } catch {
-      setFormationNotice("이미지 복사에 실패했습니다. 다시 시도해 주세요.", true);
+    setFormationNotice("공유를 지원하지 않는 브라우저라 이미지 파일로 저장합니다.", true);
+  } catch (error) {
+    console.error(error);
+    setFormationNotice("이미지 공유에 실패했습니다. 다시 시도해 주세요.", true);
+  }
+}
+
+async function shareFormationFile(file) {
+  try {
+    await navigator.share({
+      files: [file],
+      title: "조축로그 포메이션",
+      text: "조축로그 포메이션 이미지",
+    });
+    setFormationNotice("포메이션 이미지를 공유했습니다.");
+    return true;
+  } catch (error) {
+    if (error?.name === "AbortError") {
+      setFormationNotice("이미지 공유를 취소했습니다.", true);
+      return true;
     }
+    console.error(error);
+    return false;
   }
 }
 
@@ -1373,11 +1410,15 @@ function downloadBlob(blob) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement("a");
   link.href = url;
-  link.download = `jochook-log-${state.formation.activeQuarter}q.png`;
+  link.download = getFormationImageFileName();
   document.body.appendChild(link);
   link.click();
   link.remove();
   URL.revokeObjectURL(url);
+}
+
+function getFormationImageFileName() {
+  return `jochook-log-${state.formation.activeQuarter}q.png`;
 }
 
 function escapeHtml(value) {
