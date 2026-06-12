@@ -537,11 +537,32 @@ function clamp(value, min, max) {
 
 function ensureQuarterData(targetState = state) {
   if (!targetState.formation.squads) targetState.formation.squads = {};
+  const fallbackShape = FORMATIONS[targetState.formation.shape] ? targetState.formation.shape : "4-2-3-1";
   for (let quarter = 1; quarter <= targetState.formation.quarters; quarter += 1) {
     if (!targetState.formation.squads[quarter]) {
-      targetState.formation.squads[quarter] = { slots: {} };
+      targetState.formation.squads[quarter] = {
+        shape: fallbackShape,
+        slots: {},
+      };
+    }
+    if (!targetState.formation.squads[quarter].slots) {
+      targetState.formation.squads[quarter].slots = {};
+    }
+    if (!FORMATIONS[targetState.formation.squads[quarter].shape]) {
+      targetState.formation.squads[quarter].shape = fallbackShape;
     }
   }
+}
+
+function getQuarterData(quarter = state.formation.activeQuarter) {
+  ensureQuarterData();
+  return state.formation.squads[quarter];
+}
+
+function getCurrentFormationShape() {
+  const quarterData = getQuarterData();
+  const shape = quarterData.shape || state.formation.shape || "4-2-3-1";
+  return FORMATIONS[shape] ? shape : "4-2-3-1";
 }
 
 function getMemberName(memberId) {
@@ -774,7 +795,7 @@ function renderMatchPrep() {
 
 function renderFormation() {
   dom.quarterCountSelect.value = String(state.formation.quarters);
-  dom.formationSelect.value = state.formation.shape;
+  dom.formationSelect.value = getCurrentFormationShape();
 
   const quarterButtons = Array.from({ length: state.formation.quarters }, (_, index) => {
     const quarter = index + 1;
@@ -792,12 +813,13 @@ function renderFormation() {
 
 function renderBoardHeader() {
   const teamName = state.team.name || "나의 팀";
-  dom.formationBoardHeader.textContent = `${teamName} · ${state.formation.activeQuarter}쿼터 · ${state.formation.shape} 포메이션`;
+  const shape = getCurrentFormationShape();
+  dom.formationBoardHeader.textContent = `${teamName} · ${state.formation.activeQuarter}쿼터 · ${shape} 포메이션`;
 }
 
 function renderSquadBoard() {
-  const slots = FORMATIONS[state.formation.shape];
-  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  const slots = FORMATIONS[getCurrentFormationShape()];
+  const quarterData = getQuarterData();
   const fieldLines = `
     <span class="pitch-line center-line"></span>
     <span class="pitch-line center-circle"></span>
@@ -834,7 +856,7 @@ function renderSquadBoard() {
 
 function renderPlayerPool() {
   const placedIds = new Set(
-    Object.values(state.formation.squads[state.formation.activeQuarter]?.slots || {})
+    Object.values(getQuarterData().slots || {})
       .map((slot) => slot.playerId)
       .filter(Boolean),
   );
@@ -1137,14 +1159,14 @@ function removePlayerFromAllSlots(playerId) {
 
 function updateSquadSlot(slotId, patch) {
   const quarter = state.formation.activeQuarter;
-  const quarterData = state.formation.squads[quarter] || { slots: {} };
+  const quarterData = getQuarterData(quarter);
   quarterData.slots[slotId] = { ...(quarterData.slots[slotId] || {}), ...patch };
   state.formation.squads[quarter] = quarterData;
   saveState();
 }
 
 function clearSlotPlayer(slotId) {
-  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  const quarterData = getQuarterData();
   const playerId = quarterData.slots[slotId]?.playerId;
   if (!playerId) return;
   updateSquadSlot(slotId, { playerId: "" });
@@ -1153,7 +1175,7 @@ function clearSlotPlayer(slotId) {
 }
 
 function movePlayerBetweenSlots(sourceSlotId, targetSlotId) {
-  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  const quarterData = getQuarterData();
   const sourceSlot = quarterData.slots[sourceSlotId] || {};
   const targetSlot = quarterData.slots[targetSlotId] || {};
   const sourcePlayerId = sourceSlot.playerId;
@@ -1183,7 +1205,10 @@ function placePlayerInSlot(slotId, playerId) {
 function resetCurrentQuarterFormation() {
   if (!confirm("현재 쿼터의 포메이션과 메모를 초기화할까요?")) return;
   const quarter = state.formation.activeQuarter;
-  state.formation.squads[quarter] = { slots: {} };
+  state.formation.squads[quarter] = {
+    shape: getCurrentFormationShape(),
+    slots: {},
+  };
   selectedPoolPlayerId = null;
   saveState();
   renderFormation();
@@ -1253,8 +1278,8 @@ function saveFormationMatch() {
 }
 
 function getDuplicateSlotLabels(memberId, nextSlotId) {
-  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
-  return FORMATIONS[state.formation.shape]
+  const quarterData = getQuarterData();
+  return FORMATIONS[getCurrentFormationShape()]
     .filter((slot) => slot.id !== nextSlotId && quarterData.slots[slot.id]?.playerId === memberId)
     .map((slot) => slot.label);
 }
@@ -1322,8 +1347,8 @@ function deleteMatch(matchId) {
 
 function openMemoModal(slotId) {
   activeMemoSlotId = slotId;
-  const slot = FORMATIONS[state.formation.shape].find((item) => item.id === slotId);
-  const quarterData = state.formation.squads[state.formation.activeQuarter] || { slots: {} };
+  const slot = FORMATIONS[getCurrentFormationShape()].find((item) => item.id === slotId);
+  const quarterData = getQuarterData();
   const savedSlot = quarterData.slots[slotId] || {};
   dom.memoModalTitle.textContent = `${state.formation.activeQuarter}쿼터 ${slot?.label || ""} 메모`;
   dom.slotMemoInput.value = savedSlot.note || "";
@@ -1562,6 +1587,8 @@ function bindEvents() {
   });
 
   dom.formationSelect.addEventListener("change", () => {
+    const quarterData = getQuarterData();
+    quarterData.shape = dom.formationSelect.value;
     state.formation.shape = dom.formationSelect.value;
     saveState();
     renderFormation();
