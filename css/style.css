@@ -771,8 +771,9 @@ main {
 .stat-pill {
   display: grid;
   gap: 2px;
+  border: 1px solid rgba(20, 122, 61, 0.1);
   border-radius: var(--radius);
-  background: linear-gradient(180deg, #f8fbf8, var(--surface-strong));
+  background: linear-gradient(180deg, #edf5ee, #e2eee4);
   padding: 10px;
   text-align: center;
 }
