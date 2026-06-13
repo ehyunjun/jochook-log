@@ -148,14 +148,14 @@ textarea {
 
 .btn-primary {
   --tblr-btn-color: #fff;
-  --tblr-btn-bg: var(--green);
-  --tblr-btn-border-color: var(--green);
+  --tblr-btn-bg: #4f8f58;
+  --tblr-btn-border-color: #4f8f58;
   --tblr-btn-hover-color: #fff;
-  --tblr-btn-hover-bg: var(--green-dark);
-  --tblr-btn-hover-border-color: var(--green-dark);
-  --tblr-btn-active-bg: var(--green-dark);
-  --tblr-btn-active-border-color: var(--green-dark);
-  box-shadow: 0 8px 18px rgba(20, 122, 61, 0.16);
+  --tblr-btn-hover-bg: #3f7f4a;
+  --tblr-btn-hover-border-color: #3f7f4a;
+  --tblr-btn-active-bg: #376f41;
+  --tblr-btn-active-border-color: #376f41;
+  box-shadow: 0 8px 18px rgba(79, 143, 88, 0.16);
 }
 
 .btn-outline-primary {
