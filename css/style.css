@@ -1820,8 +1820,8 @@ main {
   }
 
   .slot-note-button {
-    top: 6px;
-    right: 6px;
+    top: -6px;
+    right: -5px;
     width: 22px;
     height: 22px;
     min-width: 22px;
