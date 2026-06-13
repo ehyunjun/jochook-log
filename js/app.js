@@ -813,11 +813,11 @@ function renderFormation() {
 
   const quarterButtons = Array.from({ length: state.formation.quarters }, (_, index) => {
     const quarter = index + 1;
-    const active = quarter === state.formation.activeQuarter ? "active" : "";
-    return `<button class="${active}" type="button" data-quarter="${quarter}">${quarter}쿼터</button>`;
+    const active = quarter === state.formation.activeQuarter ? " active" : "";
+    return `<button class="quarter-tab-button${active}" type="button" data-quarter="${quarter}">${quarter}쿼터</button>`;
   }).join("");
   const addButtonDisabled = state.formation.quarters >= MAX_QUARTERS ? "disabled" : "";
-  dom.quarterTabs.innerHTML = `${quarterButtons}<button class="add-quarter-button" type="button" data-add-quarter ${addButtonDisabled} aria-label="쿼터 추가">+</button>`;
+  dom.quarterTabs.innerHTML = `${quarterButtons}<button class="quarter-tab-button add-quarter-button" type="button" data-add-quarter ${addButtonDisabled} aria-label="쿼터 추가">+</button>`;
 
   renderBoardHeader();
   renderSquadBoard();
@@ -1547,7 +1547,11 @@ function bindEvents() {
     const deleteButton = event.target.closest("[data-delete-member]");
     if (deleteButton) {
       event.stopPropagation();
-      deleteMember(deleteButton.dataset.deleteMember);
+      const memberId = deleteButton.dataset.deleteMember;
+      const member = state.members.find((item) => item.id === memberId);
+      const memberName = member?.name || "이 팀원";
+      if (!confirm(`${memberName} 팀원을 삭제하시겠습니까?`)) return;
+      deleteMember(memberId);
       return;
     }
 

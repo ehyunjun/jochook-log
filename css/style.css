@@ -75,7 +75,7 @@ button {
   cursor: pointer;
 }
 
-button:not(.btn):not(.tab-button):not(.icon-delete-member) {
+button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -94,7 +94,7 @@ button:not(.btn):not(.tab-button):not(.icon-delete-member) {
     box-shadow 0.18s ease;
 }
 
-button:not(.btn):not(.tab-button):not(.icon-delete-member):hover {
+button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member):hover {
   background: var(--green-dark);
   box-shadow: 0 8px 18px rgba(20, 122, 61, 0.18);
   transform: translateY(-1px);
@@ -931,45 +931,49 @@ main {
 
 .quarter-tabs {
   display: flex;
-  gap: 8px;
+  gap: 10px;
   overflow-x: auto;
-  width: fit-content;
+  overflow-y: visible;
   max-width: 100%;
-  padding: 6px;
+  padding: 2px 0 4px;
   margin-bottom: 14px;
-  border-radius: 999px;
-  background: rgba(228, 243, 231, 0.9);
+  border-radius: 0;
+  background: transparent;
 }
 
 .quarter-tabs button {
   flex: 0 0 auto;
-  min-height: 36px;
-  border: 0;
-  border-radius: 999px;
+  min-height: 44px;
+  border: 1px solid var(--jl-nav-border);
+  border-radius: 14px;
   background: #fff;
-  color: var(--green-dark);
-  padding: 0 14px;
-  font-weight: 800;
+  color: #275c32;
+  padding: 0 18px;
+  font-weight: 900;
   box-shadow: none;
+  transform: none;
 }
 
 .quarter-tabs button.active {
-  background: var(--green);
+  border-color: var(--jl-nav-green);
+  background: var(--jl-nav-green);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(20, 122, 61, 0.2);
+  box-shadow: 0 6px 14px rgba(79, 143, 88, 0.18);
 }
 
 .quarter-tabs button:hover {
-  background: #fff;
-  color: var(--green-dark);
+  border-color: var(--jl-nav-green);
+  background: var(--jl-nav-green-soft);
+  color: #275c32;
   box-shadow: none;
   transform: none;
 }
 
 .quarter-tabs button.active:hover {
-  background: var(--green);
+  border-color: var(--jl-nav-green-hover);
+  background: var(--jl-nav-green-hover);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(20, 122, 61, 0.2);
+  box-shadow: 0 6px 14px rgba(79, 143, 88, 0.2);
 }
 
 .quarter-tabs button:disabled {
@@ -979,8 +983,9 @@ main {
 }
 
 .add-quarter-button {
-  width: 42px;
-  padding: 0;
+  width: auto;
+  min-width: 48px;
+  padding: 0 16px;
   font-size: 1.25rem;
 }
 
