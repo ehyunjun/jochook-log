@@ -782,12 +782,16 @@ function renderMatchPrep() {
   dom.formationParticipantList.innerHTML = state.members.length
     ? sortByName(state.members)
       .map(
-        (member) => `
-            <label class="prep-check">
-              <input class="form-check-input" type="checkbox" value="${member.id}" data-prep-participant ${matchInfo.participantIds.includes(member.id) ? "checked" : ""} />
-              ${escapeHtml(member.name)}
+        (member) => {
+          const checked = matchInfo.participantIds.includes(member.id);
+          return `
+            <label class="prep-check${checked ? " selected" : ""}">
+              <input class="form-check-input" type="checkbox" value="${member.id}" data-prep-participant ${checked ? "checked" : ""} />
+              <span class="prep-check-name">${escapeHtml(member.name)}</span>
+              <span class="prep-check-mark" aria-hidden="true">✓</span>
             </label>
-          `,
+          `;
+        },
       )
       .join("")
     : `<p class="empty-text">나의 팀 화면에서 팀원을 먼저 추가해 주세요.</p>`;
