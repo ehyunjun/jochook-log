@@ -75,7 +75,7 @@ button {
   cursor: pointer;
 }
 
-button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member) {
+button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member):not(.slot-note-button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -94,7 +94,7 @@ button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-memb
     box-shadow 0.18s ease;
 }
 
-button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member):hover {
+button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member):not(.slot-note-button):hover {
   background: var(--green-dark);
   box-shadow: 0 8px 18px rgba(20, 122, 61, 0.18);
   transform: translateY(-1px);
