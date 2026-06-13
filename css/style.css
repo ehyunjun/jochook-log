@@ -75,7 +75,7 @@ button {
   cursor: pointer;
 }
 
-button:not(.btn):not(.tab-button) {
+button:not(.btn):not(.tab-button):not(.icon-delete-member) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -94,7 +94,7 @@ button:not(.btn):not(.tab-button) {
     box-shadow 0.18s ease;
 }
 
-button:not(.btn):not(.tab-button):hover {
+button:not(.btn):not(.tab-button):not(.icon-delete-member):hover {
   background: var(--green-dark);
   box-shadow: 0 8px 18px rgba(20, 122, 61, 0.18);
   transform: translateY(-1px);
@@ -668,6 +668,7 @@ main {
 }
 
 .member-card {
+  position: relative;
   display: grid;
   gap: 12px;
   width: 100%;
@@ -687,7 +688,14 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 10px;
-  align-items: start;
+  align-items: flex-start;
+}
+
+.member-card-actions {
+  display: inline-flex;
+  flex: 0 0 auto;
+  gap: 6px;
+  align-items: flex-start;
 }
 
 .member-name {
@@ -707,16 +715,44 @@ main {
   font-weight: 900;
 }
 
-.delete-member {
-  min-height: 32px;
-  padding: 0 10px;
+.delete-member.icon-delete-member {
+  display: inline-grid;
+  flex: 0 0 auto;
+  width: 30px;
+  height: 30px;
+  min-height: 30px;
+  place-items: center;
+  border: 1px solid rgba(199, 66, 50, 0.24);
+  border-radius: 999px;
   background: #fff1ee;
-  color: var(--danger);
+  color: var(--jl-danger);
+  padding: 0;
+  font-size: 1.2rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(0.92);
+  box-shadow: none;
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
 }
 
-.delete-member:hover {
-  background: var(--danger);
+.member-card:hover .delete-member.icon-delete-member,
+.member-card:focus-within .delete-member.icon-delete-member {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.delete-member.icon-delete-member:hover {
+  border-color: var(--jl-danger);
+  background: var(--jl-danger);
   color: #fff;
+  box-shadow: 0 8px 18px rgba(199, 66, 50, 0.18);
 }
 
 .stat-row {
@@ -1819,6 +1855,11 @@ main {
   .guest-actions {
     opacity: 1;
     pointer-events: auto;
+  }
+
+  .delete-member.icon-delete-member {
+    opacity: 1;
+    transform: scale(1);
   }
 }
 

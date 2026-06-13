@@ -688,14 +688,24 @@ function renderTeam() {
                 <div class="member-name">${escapeHtml(member.name)}</div>
                 ${renderPlayerMeta(member)}
               </div>
-              ${badge}
+              <div class="member-card-actions">
+                ${badge}
+                <button
+                  class="delete-member icon-delete-member"
+                  type="button"
+                  data-delete-member="${member.id}"
+                  aria-label="${escapeHtml(member.name)} 삭제"
+                  title="삭제"
+                >
+                  ×
+                </button>
+              </div>
             </div>
             <div class="stat-row">
               ${statPill(stats.appearances, "출전")}
               ${statPill(stats.goals, "득점")}
               ${statPill(stats.assists, "도움")}
             </div>
-            <button class="btn btn-outline-danger delete-member" type="button" data-delete-member="${member.id}">삭제</button>
           </article>
         `;
       })
