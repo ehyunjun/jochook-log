@@ -545,7 +545,7 @@ main {
 }
 
 .team-info > div:first-child {
-  padding: 20px;
+  padding: 18px 20px;
   border: 1px solid var(--jl-border);
   border-radius: 14px;
   background: #f7fbf7;
@@ -559,6 +559,13 @@ main {
   font-weight: 800;
 }
 
+.team-info > div:first-child .label-text {
+  color: var(--jl-muted);
+  font-size: 1.02rem;
+  font-weight: 900;
+  letter-spacing: -0.01em;
+}
+
 .team-info strong {
   display: block;
   font-size: 1.3rem;
@@ -566,8 +573,8 @@ main {
 
 .team-info strong#teamNameDisplay {
   color: var(--jl-ink);
-  font-size: clamp(1.85rem, 3vw, 2.35rem);
-  line-height: 1.1;
+  font-size: clamp(1.5rem, 2.2vw, 1.85rem);
+  line-height: 1.15;
   font-weight: 900;
   letter-spacing: -0.03em;
 }
