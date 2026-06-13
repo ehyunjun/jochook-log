@@ -1221,26 +1221,33 @@ main {
   position: absolute;
   top: 6px;
   right: 6px;
+  z-index: 5;
   display: inline-grid;
   width: 22px;
   height: 22px;
+  min-width: 22px;
   min-height: 22px;
   place-items: center;
   border: 1px solid rgba(20, 122, 61, 0.28);
   border-radius: 50%;
   background: #fff;
   color: var(--green-dark);
-  font-size: 1rem;
-  line-height: 1;
-  opacity: 0;
   padding: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: none;
+  opacity: 0;
   pointer-events: none;
+  transform: none;
 }
 
 .slot-note-button:hover {
   border-color: var(--accent);
   background: var(--accent);
   color: #fff;
+  box-shadow: none;
+  transform: none;
 }
 
 .position-slot:hover .slot-note-button,
@@ -1813,13 +1820,18 @@ main {
   }
 
   .slot-note-button {
-    position: absolute;
-    top: -7px;
-    right: -2px;
+    top: 6px;
+    right: 6px;
     width: 22px;
     height: 22px;
+    min-width: 22px;
     min-height: 22px;
-    font-size: 0.95rem;
+    background: #fff;
+    color: var(--green-dark);
+    opacity: 0;
+    pointer-events: none;
+    box-shadow: none;
+    transform: none;
   }
 
   .player-pool-panel {
