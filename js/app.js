@@ -695,7 +695,7 @@ function renderTeam() {
               ${statPill(stats.goals, "득점")}
               ${statPill(stats.assists, "도움")}
             </div>
-            <button class="delete-member" type="button" data-delete-member="${member.id}">삭제</button>
+            <button class="btn btn-outline-danger delete-member" type="button" data-delete-member="${member.id}">삭제</button>
           </article>
         `;
       })
@@ -784,7 +784,7 @@ function renderMatchPrep() {
       .map(
         (member) => `
             <label class="prep-check">
-              <input type="checkbox" value="${member.id}" data-prep-participant ${matchInfo.participantIds.includes(member.id) ? "checked" : ""} />
+              <input class="form-check-input" type="checkbox" value="${member.id}" data-prep-participant ${matchInfo.participantIds.includes(member.id) ? "checked" : ""} />
               ${escapeHtml(member.name)}
             </label>
           `,
@@ -874,8 +874,8 @@ function renderPlayerPool() {
         const guestActions = player.isGuest
           ? `
               <div class="guest-actions">
-                <button class="secondary-button" type="button" data-edit-guest="${player.id}">수정</button>
-                <button class="delete-guest-button" type="button" data-delete-guest="${player.id}">삭제</button>
+                <button class="btn btn-outline-secondary secondary-button" type="button" data-edit-guest="${player.id}">수정</button>
+                <button class="btn btn-outline-danger delete-guest-button" type="button" data-delete-guest="${player.id}">삭제</button>
               </div>
             `
           : "";
@@ -899,7 +899,7 @@ function renderPlayerPool() {
     <div class="player-pool-list">
       ${playerListMarkup}
     </div>
-    <button class="secondary-button add-guest-panel-button" type="button" data-add-guest>용병 추가</button>
+    <button class="btn btn-outline-secondary secondary-button add-guest-panel-button" type="button" data-add-guest>용병 추가</button>
   `;
 }
 
@@ -1027,10 +1027,10 @@ function renderMatchList() {
               <h4>${escapeHtml(title)}</h4>
               <p class="match-meta">출전 선수 ${participantCount}명</p>
             </div>
-            <button class="delete-match-button" type="button" data-delete-match="${match.id}">삭제</button>
+            <button class="btn btn-outline-danger delete-match-button" type="button" data-delete-match="${match.id}">삭제</button>
           </div>
           <p>득점 ${goalCount}개 · 어시스트 ${assistCount}개</p>
-          <button class="secondary-button select-match-button" type="button" data-select-match="${match.id}">기록 입력</button>
+          <button class="btn btn-outline-secondary secondary-button select-match-button" type="button" data-select-match="${match.id}">기록 입력</button>
         </article>
       `;
     })
