@@ -13,6 +13,10 @@
   --jl-radius: 14px;
   --jl-shadow: 0 14px 32px rgba(19, 62, 34, 0.1);
   --jl-page-width: 1448px;
+  --jl-nav-green: #4f8f58;
+  --jl-nav-green-hover: #3f7f4a;
+  --jl-nav-green-soft: #f3faf4;
+  --jl-nav-border: #bdd8c1;
   --bg: var(--jl-bg);
   --surface: var(--jl-surface);
   --surface-strong: var(--jl-surface-soft);
@@ -286,10 +290,11 @@ main {
   display: flex;
   gap: 10px;
   overflow-x: auto;
+  overflow-y: visible;
   width: 100%;
   max-width: 100%;
   margin-top: 16px;
-  padding: 0;
+  padding: 2px 0 4px;
   border-radius: 0;
   background: transparent;
 }
@@ -297,35 +302,38 @@ main {
 .top-tabs .tab-button {
   flex: 0 0 auto;
   min-height: 44px;
-  border: 1px solid rgba(20, 122, 61, 0.22);
+  border: 1px solid var(--jl-nav-border);
   border-radius: 14px;
   background: #fff;
-  color: var(--jl-green-dark);
+  color: #275c32;
   padding: 0 18px;
   font-weight: 900;
   box-shadow: none;
+  transform: none;
 }
 
 .top-tabs .tab-button:hover {
-  border-color: rgba(20, 122, 61, 0.48);
-  background: #edf7ef;
-  color: var(--jl-green-dark);
-  box-shadow: 0 8px 18px rgba(20, 122, 61, 0.1);
-  transform: translateY(-1px);
+  border-color: var(--jl-nav-green);
+  background: var(--jl-nav-green-soft);
+  color: #275c32;
+  box-shadow: none;
+  transform: none;
 }
 
 .top-tabs .tab-button.active {
-  border-color: var(--jl-green);
-  background: var(--jl-green);
+  border-color: var(--jl-nav-green);
+  background: var(--jl-nav-green);
   color: #fff;
-  box-shadow: 0 8px 18px rgba(20, 122, 61, 0.18);
+  box-shadow: 0 6px 14px rgba(79, 143, 88, 0.18);
   transform: none;
 }
 
 .top-tabs .tab-button.active:hover {
-  border-color: var(--jl-green-dark);
-  background: var(--jl-green-dark);
+  border-color: var(--jl-nav-green-hover);
+  background: var(--jl-nav-green-hover);
   color: #fff;
+  box-shadow: 0 6px 14px rgba(79, 143, 88, 0.2);
+  transform: none;
 }
 
 .tab-panel {
@@ -537,7 +545,7 @@ main {
 }
 
 .team-info > div:first-child {
-  padding: 16px;
+  padding: 20px;
   border: 1px solid var(--jl-border);
   border-radius: 14px;
   background: #f7fbf7;
@@ -558,8 +566,10 @@ main {
 
 .team-info strong#teamNameDisplay {
   color: var(--jl-ink);
-  font-size: 1.55rem;
+  font-size: clamp(1.85rem, 3vw, 2.35rem);
+  line-height: 1.1;
   font-weight: 900;
+  letter-spacing: -0.03em;
 }
 
 .team-share-box,
