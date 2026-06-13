@@ -575,7 +575,7 @@ main {
   color: var(--jl-ink);
   font-size: clamp(1.5rem, 2.2vw, 1.85rem);
   line-height: 1.15;
-  font-weight: 900;
+  font-weight: 700;
   letter-spacing: -0.03em;
 }
 
