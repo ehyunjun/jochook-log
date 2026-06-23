@@ -275,15 +275,10 @@ main {
 }
 
 .brand h1 {
+  margin: 0;
   color: var(--ink);
   font-size: clamp(1.45rem, 2vw, 2rem);
   font-weight: 900;
-}
-
-.brand p {
-  color: var(--muted);
-  font-size: 0.95rem;
-  line-height: 1.5;
 }
 
 .top-tabs {
@@ -587,31 +582,11 @@ main {
 
 .team-sync-box {
   border-top: 1px solid var(--line);
-  padding-top: 18px;
-}
-
-.team-sync-box h3 {
-  margin: 0;
-  font-size: 1rem;
+  padding-top: 16px;
 }
 
 .team-sync-box>.secondary-button {
   justify-self: start;
-}
-
-#cloudSyncInfo:empty {
-  display: none;
-}
-
-#cloudSyncInfo:not(:empty) {
-  display: inline-flex;
-  width: fit-content;
-  max-width: 100%;
-  border-radius: 999px;
-  background: var(--jl-green-soft);
-  color: var(--jl-green-dark);
-  padding: 8px 12px;
-  font-weight: 800;
 }
 
 .share-url-row {

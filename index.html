@@ -15,7 +15,6 @@
           <span class="brand-mark">JL</span>
           <div>
             <h1>조축로그</h1>
-            <p>조기축구 팀 관리 대시보드</p>
           </div>
         </div>
       </div>
@@ -87,14 +86,11 @@
               <strong id="teamNameDisplay">팀 없음</strong>
             </div>
             <div class="team-sync-box">
-              <h3>팀 정보 저장</h3>
-              <p class="helper-text">팀원, 포메이션, 메모, 경기 기록을 저장하고 공유 코드로 다시 불러올 수 있습니다.</p>
               <button class="btn btn-outline-primary secondary-button" type="button" id="saveCloudButton">팀 정보 저장</button>
               <div class="share-code-row">
                 <input class="form-control" id="cloudCodeInput" type="text" placeholder="공유 코드 입력" autocomplete="off" />
                 <button class="btn btn-outline-secondary secondary-button" type="button" id="loadCloudButton">팀 정보 불러오기</button>
               </div>
-              <p class="helper-text" id="cloudSyncInfo"></p>
             </div>
           </aside>
 
@@ -236,7 +232,7 @@
         <div class="matches-section">
           <div class="matches-section-heading">
             <h3 class="block-title">저장된 경기 기록</h3>
-            <button class="mini-toggle-button" type="button" id="toggleSavedMatchesButton" aria-expanded="true">접기 ▲</button>
+            <button class="mini-toggle-button" type="button" id="toggleSavedMatchesButton" aria-expanded="false">펼치기 ▼</button>
           </div>
           <div class="match-list" id="matchList"></div>
         </div>

@@ -187,7 +187,6 @@ const dom = {
   saveCloudButton: $("#saveCloudButton"),
   loadCloudButton: $("#loadCloudButton"),
   cloudCodeInput: $("#cloudCodeInput"),
-  cloudSyncInfo: $("#cloudSyncInfo"),
   memberForm: $("#memberForm"),
   memberNameInput: $("#memberNameInput"),
   memberNumberInput: $("#memberNumberInput"),
@@ -233,8 +232,8 @@ let selectedMemberId = null;
 let selectedPoolPlayerId = null;
 let selectedRecordMatchId = null;
 let activeMemoSlotId = null;
-let isRecentMatchesCollapsed = false;
-let isSavedMatchesCollapsed = false;
+let isRecentMatchesCollapsed = true;
+let isSavedMatchesCollapsed = true;
 let recordDraft = {
   participants: new Set(),
   goals: [],
@@ -398,8 +397,8 @@ function resetRuntimeState() {
   selectedPoolPlayerId = null;
   selectedRecordMatchId = null;
   activeMemoSlotId = null;
-  isRecentMatchesCollapsed = false;
-  isSavedMatchesCollapsed = false;
+  isRecentMatchesCollapsed = true;
+  isSavedMatchesCollapsed = true;
   recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
 }
 
@@ -442,9 +441,6 @@ async function saveStateToSupabase() {
   saveState();
   renderAll();
   if (dom.cloudCodeInput) dom.cloudCodeInput.value = state.sync.shareCode;
-  if (dom.cloudSyncInfo) {
-    dom.cloudSyncInfo.textContent = `팀 정보가 저장되었습니다. 공유 코드: ${state.sync.shareCode}`;
-  }
   alert(`팀 정보가 저장되었습니다. 공유 코드: ${state.sync.shareCode}`);
 }
 
@@ -485,9 +481,6 @@ async function loadStateFromSupabase(shareCode) {
   setActiveTab("team");
 
   if (dom.cloudCodeInput) dom.cloudCodeInput.value = data.share_code;
-  if (dom.cloudSyncInfo) {
-    dom.cloudSyncInfo.textContent = `팀 정보를 불러왔습니다. 공유 코드: ${data.share_code}`;
-  }
   alert("팀 정보를 불러왔습니다.");
 }
 
@@ -669,11 +662,6 @@ function setActiveTab(tabId) {
 
 function renderTeam() {
   dom.teamNameDisplay.textContent = state.team.name || "팀 없음";
-  if (dom.cloudSyncInfo) {
-    dom.cloudSyncInfo.textContent = state.sync?.shareCode
-      ? `현재 공유 코드: ${state.sync.shareCode}`
-      : "저장하면 공유 코드가 생성됩니다.";
-  }
   if (dom.cloudCodeInput && state.sync?.shareCode && !dom.cloudCodeInput.value) {
     dom.cloudCodeInput.value = state.sync.shareCode;
   }
@@ -1696,6 +1684,9 @@ function bindEvents() {
 
     const card = event.target.closest("[data-member-id]");
     if (!card) return;
+    if (selectedMemberId !== card.dataset.memberId) {
+      isRecentMatchesCollapsed = true;
+    }
     selectedMemberId = card.dataset.memberId;
     renderTeam();
   });
@@ -1982,7 +1973,4 @@ const sharedTeamLoaded = loadTeamFromShareHash();
 renderAll();
 if (sharedTeamLoaded) {
   setActiveTab("team");
-  if (dom.cloudSyncInfo) {
-    dom.cloudSyncInfo.textContent = "공유된 팀원 정보를 불러왔습니다.";
-  }
 }
