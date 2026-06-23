@@ -179,11 +179,6 @@ const dom = {
   teamNameInput: $("#teamNameInput"),
   createdTeamInfo: $("#createdTeamInfo"),
   teamNameDisplay: $("#teamNameDisplay"),
-  makeShareUrlButton: $("#makeShareUrlButton"),
-  copyShareUrlButton: $("#copyShareUrlButton"),
-  shareUrlBox: $("#shareUrlBox"),
-  shareUrlOutput: $("#shareUrlOutput"),
-  teamShareInfo: $("#teamShareInfo"),
   saveCloudButton: $("#saveCloudButton"),
   loadCloudButton: $("#loadCloudButton"),
   cloudCodeInput: $("#cloudCodeInput"),
@@ -234,12 +229,7 @@ let selectedRecordMatchId = null;
 let activeMemoSlotId = null;
 let isRecentMatchesCollapsed = true;
 let isSavedMatchesCollapsed = true;
-let recordDraft = {
-  participants: new Set(),
-  goals: [],
-  assists: [],
-  hydratedFromFormation: false,
-};
+let recordDraft = createEmptyRecordDraft();
 
 function defaultState() {
   return {
@@ -312,63 +302,17 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
 }
 
-function encodeShareData(data) {
-  return btoa(unescape(encodeURIComponent(JSON.stringify(data))));
+function createEmptyRecordDraft() {
+  return {
+    participants: new Set(),
+    goals: [],
+    assists: [],
+    hydratedFromFormation: false,
+  };
 }
 
 function decodeShareData(encoded) {
   return JSON.parse(decodeURIComponent(escape(atob(decodeURIComponent(encoded)))));
-}
-
-function buildTeamShareData() {
-  return {
-    type: "jochooklog-team",
-    teamName: state.team.name || "",
-    members: sortByName(state.members).map((member) => ({
-      name: member.name,
-      number: member.number || "",
-    })),
-  };
-}
-
-function clearTeamShareUrl() {
-  if (!dom.shareUrlBox) return;
-  dom.shareUrlBox.hidden = true;
-  if (dom.shareUrlOutput) dom.shareUrlOutput.value = "";
-}
-
-function makeTeamShareUrl() {
-  const encoded = encodeURIComponent(encodeShareData(buildTeamShareData()));
-  const baseUrl = `${location.origin}${location.pathname}`;
-  return `${baseUrl}#team=${encoded}`;
-}
-
-function showTeamShareUrl() {
-  if (!dom.shareUrlBox || !dom.shareUrlOutput || !dom.teamShareInfo) return;
-  if (!state.team.name && !state.members.length) {
-    dom.teamShareInfo.textContent = "공유할 팀원 정보가 없습니다.";
-    return;
-  }
-
-  dom.shareUrlOutput.value = makeTeamShareUrl();
-  dom.shareUrlBox.hidden = false;
-  dom.teamShareInfo.textContent = "공유 URL이 생성되었습니다.";
-}
-
-async function copyTeamShareUrl() {
-  if (!dom.shareUrlOutput || !dom.teamShareInfo) return;
-  if (!dom.shareUrlOutput.value) {
-    showTeamShareUrl();
-  }
-
-  try {
-    await navigator.clipboard.writeText(dom.shareUrlOutput.value);
-    dom.teamShareInfo.textContent = "공유 URL을 복사했습니다.";
-  } catch {
-    dom.shareUrlOutput.select();
-    document.execCommand("copy");
-    dom.teamShareInfo.textContent = "공유 URL을 복사했습니다.";
-  }
 }
 
 function makeShareCode() {
@@ -399,7 +343,7 @@ function resetRuntimeState() {
   activeMemoSlotId = null;
   isRecentMatchesCollapsed = true;
   isSavedMatchesCollapsed = true;
-  recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
+  recordDraft = createEmptyRecordDraft();
 }
 
 async function saveStateToSupabase() {
@@ -563,10 +507,6 @@ function getCurrentFormationShape() {
   return FORMATIONS[shape] ? shape : "4-2-3-1";
 }
 
-function getMemberName(memberId) {
-  return getPlayerName(memberId);
-}
-
 function getMemberById(memberId) {
   return state.members.find((item) => item.id === memberId);
 }
@@ -618,13 +558,6 @@ function getRecordPlayers() {
       isGuest: true,
     })),
   ]);
-}
-
-function countByPlayer(events) {
-  return events.reduce((acc, event) => {
-    acc[event.playerId] = (acc[event.playerId] || 0) + 1;
-    return acc;
-  }, {});
 }
 
 function getMemberStats(memberId) {
@@ -721,6 +654,12 @@ function playerMetaText(player) {
 function renderPlayerMeta(player, prefix = "") {
   const meta = playerMetaText(player);
   return meta ? `<p class="helper-text">${prefix}${escapeHtml(meta)}</p>` : "";
+}
+
+function setToggleButtonState(button, isCollapsed) {
+  if (!button) return;
+  button.textContent = isCollapsed ? "펼치기 ▼" : "접기 ▲";
+  button.setAttribute("aria-expanded", String(!isCollapsed));
 }
 
 function getWeekdayLabel(dateString) {
@@ -831,8 +770,7 @@ function renderMatchPrep() {
   dom.prepDateInput.value = matchInfo.date || "";
   dom.prepOpponentInput.value = matchInfo.opponent || "";
   dom.matchPrepCard.classList.toggle("collapsed", matchInfo.isPrepCollapsed);
-  dom.togglePrepButton.textContent = matchInfo.isPrepCollapsed ? "펼치기 ▼" : "접기 ▲";
-  dom.togglePrepButton.setAttribute("aria-expanded", String(!matchInfo.isPrepCollapsed));
+  setToggleButtonState(dom.togglePrepButton, matchInfo.isPrepCollapsed);
 
   dom.formationParticipantList.innerHTML = state.members.length
     ? sortByName(state.members)
@@ -1010,12 +948,6 @@ function formatMatchTitle(date, opponent) {
   return `${formatDateWithWeekday(date)} 상대팀: ${opponent || "-"}`;
 }
 
-function getMatchDisplayTitle(match) {
-  const opponent = getMatchOpponent(match);
-  if (match?.date || opponent) return formatMatchTitle(match?.date, opponent);
-  return match?.title || formatMatchTitle(match?.date, opponent);
-}
-
 function getMatchPlayerOptions(match) {
   return (match?.participants || []).map((playerId) => ({
     id: playerId,
@@ -1027,7 +959,7 @@ function renderRecordEditor() {
   const match = getSelectedRecordMatch();
   if (!match) {
     selectedRecordMatchId = null;
-    recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
+    recordDraft = createEmptyRecordDraft();
     dom.recordSelectedMatchInfo.innerHTML = `<p class="empty-text">기록을 입력할 경기를 선택해 주세요.</p>`;
     dom.appearanceList.innerHTML = "";
     dom.goalSelect.innerHTML = `<option value="">경기를 먼저 선택</option>`;
@@ -1065,34 +997,37 @@ function renderRecordEditor() {
 }
 
 function renderDraftLists(match = getSelectedRecordMatch()) {
-  dom.goalDraftList.innerHTML = recordDraft.goals.length
-    ? recordDraft.goals
-      .map((event, index) => `
-        <li class="event-draft-item">
-          <span>${escapeHtml(getPlayerName(event.playerId, match))} 득점</span>
-          <button class="event-delete-button" type="button" data-delete-draft-goal="${index}" aria-label="득점 기록 삭제" title="득점 기록 삭제">×</button>
-        </li>
-      `)
-      .join("")
-    : `<li class="empty-text">추가된 득점 기록이 없습니다.</li>`;
+  dom.goalDraftList.innerHTML = renderDraftEventList({
+    events: recordDraft.goals,
+    action: "goal",
+    label: "득점",
+    emptyText: "추가된 득점 기록이 없습니다.",
+    match,
+  });
+  dom.assistDraftList.innerHTML = renderDraftEventList({
+    events: recordDraft.assists,
+    action: "assist",
+    label: "어시스트",
+    emptyText: "추가된 어시스트 기록이 없습니다.",
+    match,
+  });
+}
 
-  dom.assistDraftList.innerHTML = recordDraft.assists.length
-    ? recordDraft.assists
-      .map((event, index) => `
-        <li class="event-draft-item">
-          <span>${escapeHtml(getPlayerName(event.playerId, match))} 어시스트</span>
-          <button class="event-delete-button" type="button" data-delete-draft-assist="${index}" aria-label="어시스트 기록 삭제" title="어시스트 기록 삭제">×</button>
-        </li>
-      `)
-      .join("")
-    : `<li class="empty-text">추가된 어시스트 기록이 없습니다.</li>`;
+function renderDraftEventList({ events, action, label, emptyText, match }) {
+  if (!events.length) return `<li class="empty-text">${emptyText}</li>`;
+
+  return events
+    .map((event, index) => `
+      <li class="event-draft-item">
+        <span>${escapeHtml(getPlayerName(event.playerId, match))} ${label}</span>
+        <button class="event-delete-button" type="button" data-delete-draft-${action}="${index}" aria-label="${label} 기록 삭제" title="${label} 기록 삭제">×</button>
+      </li>
+    `)
+    .join("");
 }
 
 function renderMatchList() {
-  if (dom.toggleSavedMatchesButton) {
-    dom.toggleSavedMatchesButton.textContent = isSavedMatchesCollapsed ? "펼치기 ▼" : "접기 ▲";
-    dom.toggleSavedMatchesButton.setAttribute("aria-expanded", String(!isSavedMatchesCollapsed));
-  }
+  setToggleButtonState(dom.toggleSavedMatchesButton, isSavedMatchesCollapsed);
   dom.matchList.classList.toggle("collapsed", isSavedMatchesCollapsed);
   if (isSavedMatchesCollapsed) {
     dom.matchList.innerHTML = "";
@@ -1131,25 +1066,21 @@ function renderMatchList() {
     .join("");
 }
 
-function formatEventSummary(events, unit, match = null) {
-  if (!events.length) return "-";
-  const counts = countByPlayer(events);
-  return Object.entries(counts)
-    .map(([playerId, count]) => `${getPlayerName(playerId, match)} ${count}${unit}`)
-    .join(", ");
-}
-
 function loadMatchForRecord(matchId) {
   const match = state.matches.find((item) => item.id === matchId);
   if (!match) return;
   selectedRecordMatchId = matchId;
-  recordDraft = {
+  recordDraft = createRecordDraftFromMatch(match);
+  renderRecords();
+}
+
+function createRecordDraftFromMatch(match) {
+  return {
     participants: new Set(match.participants || []),
     goals: [...(match.goals || [])],
     assists: [...(match.assists || [])],
     hydratedFromFormation: false,
   };
-  renderRecords();
 }
 
 function syncRecordDraftWithPlayers() {
@@ -1171,7 +1102,6 @@ function addMember({ name, number, isMercenary = false }) {
     createdAt: new Date().toISOString(),
   });
   saveState();
-  clearTeamShareUrl();
   renderAll();
 }
 
@@ -1186,7 +1116,6 @@ function deleteMember(memberId) {
   });
   if (selectedMemberId === memberId) selectedMemberId = null;
   saveState();
-  clearTeamShareUrl();
   renderAll();
 }
 
@@ -1477,7 +1406,7 @@ function deleteMatch(matchId) {
   state.matches = state.matches.filter((item) => item.id !== matchId);
   if (selectedRecordMatchId === matchId) {
     selectedRecordMatchId = null;
-    recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
+    recordDraft = createEmptyRecordDraft();
   }
   if (getMatchInfo().savedMatchId === matchId) {
     getMatchInfo().savedMatchId = "";
@@ -1636,7 +1565,6 @@ function bindEvents() {
     }
 
     state.team = { name };
-    clearTeamShareUrl();
     saveState();
     dom.createdTeamInfo.textContent = `${state.team.name} 팀을 만들었습니다.`;
     renderAll();
@@ -1655,12 +1583,6 @@ function bindEvents() {
     dom.memberForm.reset();
   });
 
-  if (dom.makeShareUrlButton) {
-    dom.makeShareUrlButton.addEventListener("click", showTeamShareUrl);
-  }
-  if (dom.copyShareUrlButton) {
-    dom.copyShareUrlButton.addEventListener("click", copyTeamShareUrl);
-  }
   if (dom.saveCloudButton) {
     dom.saveCloudButton.addEventListener("click", saveStateToSupabase);
   }
