@@ -1772,14 +1772,14 @@ main {
 #records .event-box,
 #records .record-form,
 #records .record-selected-match {
-  box-shadow: none;
+  box-shadow: 0 6px 16px rgba(19, 62, 34, 0.06);
 }
 
 #records .match-card[data-match-id]:hover,
 #records .match-card.active {
   border-color: var(--jl-nav-green);
   background: var(--jl-nav-green-soft);
-  box-shadow: none;
+  box-shadow: 0 8px 18px rgba(20, 122, 61, 0.08);
 }
 
 #records .match-card[data-match-id]:hover {
