@@ -224,6 +224,7 @@ const dom = {
   addAssistButton: $("#addAssistButton"),
   goalDraftList: $("#goalDraftList"),
   assistDraftList: $("#assistDraftList"),
+  toggleSavedMatchesButton: $("#toggleSavedMatchesButton"),
   matchList: $("#matchList"),
 };
 
@@ -233,7 +234,7 @@ let selectedPoolPlayerId = null;
 let selectedRecordMatchId = null;
 let activeMemoSlotId = null;
 let isRecentMatchesCollapsed = false;
-let expandedMatchIds = new Set();
+let isSavedMatchesCollapsed = false;
 let recordDraft = {
   participants: new Set(),
   goals: [],
@@ -398,7 +399,7 @@ function resetRuntimeState() {
   selectedRecordMatchId = null;
   activeMemoSlotId = null;
   isRecentMatchesCollapsed = false;
-  expandedMatchIds = new Set();
+  isSavedMatchesCollapsed = false;
   recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
 }
 
@@ -1100,6 +1101,16 @@ function renderDraftLists(match = getSelectedRecordMatch()) {
 }
 
 function renderMatchList() {
+  if (dom.toggleSavedMatchesButton) {
+    dom.toggleSavedMatchesButton.textContent = isSavedMatchesCollapsed ? "펼치기 ▼" : "접기 ▲";
+    dom.toggleSavedMatchesButton.setAttribute("aria-expanded", String(!isSavedMatchesCollapsed));
+  }
+  dom.matchList.classList.toggle("collapsed", isSavedMatchesCollapsed);
+  if (isSavedMatchesCollapsed) {
+    dom.matchList.innerHTML = "";
+    return;
+  }
+
   if (!state.matches.length) {
     dom.matchList.innerHTML = `<p class="empty-text">아직 저장된 경기 기록이 없습니다.</p>`;
     return;
@@ -1110,14 +1121,10 @@ function renderMatchList() {
     .reverse()
     .map((match) => {
       const active = match.id === selectedRecordMatchId ? " active" : "";
-      const expanded = expandedMatchIds.has(match.id);
       const participantCount = (match.participants || []).length;
-      const participantNames = (match.participants || []).map((playerId) => getPlayerName(playerId, match)).join(", ");
-      const goalSummary = formatEventSummary(match.goals || [], "골", match);
-      const assistSummary = formatEventSummary(match.assists || [], "어시스트", match);
       const scoreSummary = getMatchGoalAssistSummary(match);
       return `
-        <article class="match-card${active}${expanded ? " expanded" : " collapsed"}" data-match-id="${match.id}" tabindex="0">
+        <article class="match-card compact${active}" data-match-id="${match.id}" tabindex="0">
           <div class="match-card-header">
             <div class="match-card-main">
               <h4>${renderMatchTitleLine(match)}</h4>
@@ -1127,28 +1134,9 @@ function renderMatchList() {
               </div>
             </div>
             <div class="match-card-actions">
-              <button
-                class="mini-toggle-button"
-                type="button"
-                data-toggle-match-card="${match.id}"
-                aria-expanded="${String(expanded)}"
-              >
-                ${expanded ? "접기 ▲" : "펼치기 ▼"}
-              </button>
               <button class="btn btn-outline-danger delete-match-button" type="button" data-delete-match="${match.id}">삭제</button>
             </div>
           </div>
-          ${expanded
-            ? `
-              <div class="match-card-body">
-                <p><strong>출전</strong><span>${escapeHtml(participantNames || "-")}</span></p>
-                <p><strong>득점</strong><span>${escapeHtml(goalSummary)}</span></p>
-                <p><strong>어시스트</strong><span>${escapeHtml(assistSummary)}</span></p>
-                <button class="btn btn-outline-secondary secondary-button select-match-button" type="button" data-select-match="${match.id}">기록 입력</button>
-              </div>
-            `
-            : ""
-          }
         </article>
       `;
     })
@@ -1499,7 +1487,6 @@ function deleteMatch(matchId) {
   if (!confirm("이 경기 기록을 삭제할까요?")) return;
 
   state.matches = state.matches.filter((item) => item.id !== matchId);
-  expandedMatchIds.delete(matchId);
   if (selectedRecordMatchId === matchId) {
     selectedRecordMatchId = null;
     recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
@@ -1967,6 +1954,13 @@ function bindEvents() {
     deleteDraftEvent("assist", Number(deleteButton.dataset.deleteDraftAssist));
   });
 
+  if (dom.toggleSavedMatchesButton) {
+    dom.toggleSavedMatchesButton.addEventListener("click", () => {
+      isSavedMatchesCollapsed = !isSavedMatchesCollapsed;
+      renderMatchList();
+    });
+  }
+
   dom.matchList.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("[data-delete-match]");
     if (deleteButton) {
@@ -1975,22 +1969,9 @@ function bindEvents() {
       return;
     }
 
-    const toggleButton = event.target.closest("[data-toggle-match-card]");
-    if (toggleButton) {
-      event.stopPropagation();
-      const matchId = toggleButton.dataset.toggleMatchCard;
-      if (expandedMatchIds.has(matchId)) {
-        expandedMatchIds.delete(matchId);
-      } else {
-        expandedMatchIds.add(matchId);
-      }
-      renderMatchList();
-      return;
-    }
-
-    const selectButton = event.target.closest("[data-select-match]");
-    if (!selectButton) return;
-    loadMatchForRecord(selectButton.dataset.selectMatch);
+    const card = event.target.closest("[data-match-id]");
+    if (!card) return;
+    loadMatchForRecord(card.dataset.matchId);
   });
 
   dom.recordForm.addEventListener("submit", saveMatch);
