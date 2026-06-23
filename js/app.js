@@ -179,9 +179,12 @@ const dom = {
   teamNameInput: $("#teamNameInput"),
   createdTeamInfo: $("#createdTeamInfo"),
   teamNameDisplay: $("#teamNameDisplay"),
+  startLoadCloudButton: $("#startLoadCloudButton"),
+  startCloudCodeInput: $("#startCloudCodeInput"),
   saveCloudButton: $("#saveCloudButton"),
   loadCloudButton: $("#loadCloudButton"),
   cloudCodeInput: $("#cloudCodeInput"),
+  cloudCodeInputs: $$("[data-cloud-code-input]"),
   memberForm: $("#memberForm"),
   memberNameInput: $("#memberNameInput"),
   memberNumberInput: $("#memberNumberInput"),
@@ -336,6 +339,20 @@ function hasCurrentLocalData() {
   );
 }
 
+function syncCloudCodeInputs(value = state.sync?.shareCode || "") {
+  if (!value) return;
+  dom.cloudCodeInputs.forEach((input) => {
+    input.value = value;
+  });
+}
+
+function getCloudCodeInputValue(preferredInput) {
+  const preferredValue = preferredInput?.value?.trim();
+  if (preferredValue) return preferredValue;
+  const filledInput = dom.cloudCodeInputs.find((input) => input.value.trim());
+  return filledInput?.value.trim() || "";
+}
+
 function resetRuntimeState() {
   selectedMemberId = null;
   selectedPoolPlayerId = null;
@@ -384,7 +401,7 @@ async function saveStateToSupabase() {
 
   saveState();
   renderAll();
-  if (dom.cloudCodeInput) dom.cloudCodeInput.value = state.sync.shareCode;
+  syncCloudCodeInputs(state.sync.shareCode);
   alert(`팀 정보가 저장되었습니다. 공유 코드: ${state.sync.shareCode}`);
 }
 
@@ -424,7 +441,7 @@ async function loadStateFromSupabase(shareCode) {
   renderAll();
   setActiveTab("team");
 
-  if (dom.cloudCodeInput) dom.cloudCodeInput.value = data.share_code;
+  syncCloudCodeInputs(data.share_code);
   alert("팀 정보를 불러왔습니다.");
 }
 
@@ -595,9 +612,7 @@ function setActiveTab(tabId) {
 
 function renderTeam() {
   dom.teamNameDisplay.textContent = state.team.name || "팀 없음";
-  if (dom.cloudCodeInput && state.sync?.shareCode && !dom.cloudCodeInput.value) {
-    dom.cloudCodeInput.value = state.sync.shareCode;
-  }
+  syncCloudCodeInputs(state.sync?.shareCode);
 
   if (!state.members.length) {
     dom.membersGrid.innerHTML = `<p class="empty-text">아직 등록된 팀원이 없습니다.</p>`;
@@ -1588,7 +1603,12 @@ function bindEvents() {
   }
   if (dom.loadCloudButton) {
     dom.loadCloudButton.addEventListener("click", () => {
-      loadStateFromSupabase(dom.cloudCodeInput?.value || "");
+      loadStateFromSupabase(getCloudCodeInputValue(dom.cloudCodeInput));
+    });
+  }
+  if (dom.startLoadCloudButton) {
+    dom.startLoadCloudButton.addEventListener("click", () => {
+      loadStateFromSupabase(getCloudCodeInputValue(dom.startCloudCodeInput));
     });
   }
 

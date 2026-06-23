@@ -341,64 +341,69 @@ main {
 
 .start-layout {
   display: grid;
-  grid-template-columns: minmax(0, 1.15fr) minmax(340px, 0.85fr);
-  gap: 24px;
-  align-items: stretch;
+  grid-template-columns: minmax(0, 1.05fr) minmax(360px, 0.8fr);
+  gap: 20px;
+  align-items: start;
 }
 
 .intro-block {
   display: grid;
-  align-content: center;
-  gap: 14px;
-  min-height: 330px;
-  padding: 38px;
-  border-radius: 22px;
-  background:
-    linear-gradient(rgba(255, 255, 255, 0.08), transparent 46%),
-    linear-gradient(135deg, #0c5d2d 0%, #147a3d 55%, #5f9f45 100%);
-  color: #fff;
-  box-shadow: 0 22px 50px rgba(20, 122, 61, 0.24);
+  align-content: start;
+  gap: 18px;
+  min-height: 0;
+  padding: 32px;
+  border: 1px solid rgba(20, 122, 61, 0.14);
+  border-radius: 20px;
+  background: #fff;
+  color: var(--ink);
+  box-shadow: 0 10px 24px rgba(19, 62, 34, 0.06);
+}
+
+.start-brand-line {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  gap: 10px;
+  color: #275c32;
+  font-weight: 900;
+}
+
+.start-brand-mark {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  box-shadow: none;
 }
 
 .intro-block h2 {
-  font-size: clamp(2.3rem, 6vw, 5rem);
-  line-height: 1;
+  max-width: 640px;
+  font-size: clamp(2rem, 4vw, 3.6rem);
+  line-height: 1.08;
+  letter-spacing: 0;
 }
 
 .lead {
-  max-width: 520px;
-  color: rgba(255, 255, 255, 0.9);
-  font-size: 1.08rem;
+  max-width: 560px;
+  color: var(--muted);
+  font-size: 1.02rem;
   line-height: 1.65;
 }
 
-.start-feature-grid {
-  display: grid;
-  grid-template-columns: repeat(3, minmax(0, 1fr));
-  gap: 10px;
-  margin-top: 10px;
+.start-chip-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 2px;
 }
 
-.start-feature-card {
-  display: grid;
-  gap: 4px;
-  min-height: 92px;
-  align-content: end;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-  border-radius: 16px;
-  background: rgba(255, 255, 255, 0.12);
-  padding: 14px;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.18);
-}
-
-.start-feature-card strong {
-  font-size: 0.95rem;
-}
-
-.start-feature-card span {
-  color: rgba(255, 255, 255, 0.78);
-  font-size: 0.78rem;
-  font-weight: 800;
+.start-chip-row span {
+  border: 1px solid var(--jl-nav-border);
+  border-radius: 999px;
+  background: var(--jl-nav-green-soft);
+  color: #275c32;
+  padding: 8px 12px;
+  font-size: 0.86rem;
+  font-weight: 900;
 }
 
 .eyebrow {
@@ -407,27 +412,8 @@ main {
 
 .action-grid {
   display: grid;
-  gap: 16px;
-}
-
-.quick-guide-card {
-  display: grid;
   gap: 12px;
-  padding: 22px;
-}
-
-.quick-guide-card h3 {
-  font-size: 1.05rem;
-}
-
-.quick-guide-card ol {
-  display: grid;
-  gap: 10px;
-  margin: 0;
-  padding-left: 20px;
-  color: var(--muted);
-  font-weight: 700;
-  line-height: 1.45;
+  align-content: start;
 }
 
 .tool-card,
@@ -441,7 +427,6 @@ main {
 .record-selected-match,
 .match-card,
 .member-card,
-.quick-guide-card,
 .settings-row {
   border: 1px solid var(--line);
   border-radius: 18px;
@@ -451,8 +436,23 @@ main {
 
 .tool-card {
   display: grid;
-  gap: 14px;
-  padding: 24px;
+  gap: 12px;
+  padding: 20px;
+}
+
+.start-action-card {
+  box-shadow: 0 8px 20px rgba(19, 62, 34, 0.06);
+}
+
+.start-action-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+  align-items: end;
+}
+
+.start-action-row button {
+  white-space: nowrap;
 }
 
 .tool-card h3,
@@ -1847,7 +1847,6 @@ main {
 
   .intro-block,
   .tool-card,
-  .quick-guide-card,
   .match-prep-card,
   .record-form {
     padding: 16px;
@@ -1858,12 +1857,12 @@ main {
     border-radius: 18px;
   }
 
-  .start-feature-grid {
-    grid-template-columns: 1fr;
+  .intro-block h2 {
+    font-size: clamp(1.8rem, 8vw, 2.6rem);
   }
 
-  .start-feature-card {
-    min-height: 74px;
+  .start-action-row {
+    grid-template-columns: 1fr;
   }
 
   .top-tabs,
