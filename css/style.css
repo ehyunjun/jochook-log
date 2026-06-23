@@ -768,6 +768,7 @@ main {
   top: 150px;
   display: grid;
   gap: 14px;
+  margin-top: 39px;
   padding: 20px;
 }
 
@@ -1668,22 +1669,7 @@ main {
 }
 
 .matches-section {
-  display: grid;
-  gap: 14px;
-  margin-top: 24px;
-  margin-bottom: 16px;
-  border: 1px solid var(--line);
-  border-radius: 18px;
-  background: var(--surface);
-  box-shadow: var(--shadow);
-  padding: 18px;
-}
-
-.matches-section-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
+  margin-top: 0;
 }
 
 .matches-section-heading .block-title {
@@ -1780,6 +1766,26 @@ main {
   line-height: 1.5;
 }
 
+#records .card,
+#records .matches-section,
+#records .match-card,
+#records .event-box,
+#records .record-form,
+#records .record-selected-match {
+  box-shadow: none;
+}
+
+#records .match-card[data-match-id]:hover,
+#records .match-card.active {
+  border-color: var(--jl-nav-green);
+  background: var(--jl-nav-green-soft);
+  box-shadow: none;
+}
+
+#records .match-card[data-match-id]:hover {
+  transform: none;
+}
+
 @media (max-width: 1024px) {
   .formation-workspace {
     grid-template-columns: 1fr;
@@ -1822,6 +1828,7 @@ main {
 
   .detail-panel {
     position: static;
+    margin-top: 0;
   }
 
   .header-main {
@@ -2214,7 +2221,7 @@ main {
 
 @media (max-width: 640px) {
   .matches-section {
-    padding: 14px;
+    padding: 16px;
   }
 
   .matches-section-heading {
