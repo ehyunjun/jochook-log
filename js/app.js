@@ -1115,12 +1115,16 @@ function renderMatchList() {
       const participantNames = (match.participants || []).map((playerId) => getPlayerName(playerId, match)).join(", ");
       const goalSummary = formatEventSummary(match.goals || [], "골", match);
       const assistSummary = formatEventSummary(match.assists || [], "어시스트", match);
+      const scoreSummary = getMatchGoalAssistSummary(match);
       return `
         <article class="match-card${active}${expanded ? " expanded" : " collapsed"}" data-match-id="${match.id}" tabindex="0">
           <div class="match-card-header">
-            <div>
+            <div class="match-card-main">
               <h4>${renderMatchTitleLine(match)}</h4>
-              <p class="match-meta">출전 선수 ${participantCount}명</p>
+              <div class="match-compact-meta">
+                <span>출전 선수 ${participantCount}명</span>
+                <span>${escapeHtml(scoreSummary)}</span>
+              </div>
             </div>
             <div class="match-card-actions">
               <button
@@ -1134,7 +1138,6 @@ function renderMatchList() {
               <button class="btn btn-outline-danger delete-match-button" type="button" data-delete-match="${match.id}">삭제</button>
             </div>
           </div>
-          <p class="match-score-summary">${escapeHtml(getMatchGoalAssistSummary(match))}</p>
           ${expanded
             ? `
               <div class="match-card-body">
@@ -1367,7 +1370,7 @@ function deleteQuarter(quarter) {
   ensureQuarterData();
   saveState();
   renderFormation();
-  setFormationNotice(`${quarter}쿼터를 삭제했습니다.`);
+  setFormationNotice("");
 }
 
 function saveFormationMatch() {
