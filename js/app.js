@@ -58,8 +58,8 @@ const FORMATIONS = {
     { id: "rb", label: "RB", x: 85, y: 73 },
     { id: "cdm", label: "CDM", x: 50, y: 61 },
     { id: "lm", label: "LM", x: 16, y: 44 },
-    { id: "lcm", label: "LCM", x: 39, y: 48 },
-    { id: "rcm", label: "RCM", x: 61, y: 48 },
+    { id: "lcm", label: "LCM", x: 35, y: 48 },
+    { id: "rcm", label: "RCM", x: 65, y: 48 },
     { id: "rm", label: "RM", x: 84, y: 44 },
     { id: "st", label: "ST", x: 50, y: 20 },
   ],
@@ -105,7 +105,7 @@ const FORMATIONS = {
   "3-4-3": [
     { id: "gk", label: "GK", x: 50, y: 92 },
     { id: "lcb", label: "LCB", x: 30, y: 75 },
-    { id: "cb", label: "CB", x: 50, y: 78 },
+    { id: "cb", label: "CB", x: 50, y: 73 },
     { id: "rcb", label: "RCB", x: 70, y: 75 },
     { id: "lm", label: "LM", x: 16, y: 52 },
     { id: "lcm", label: "LCM", x: 39, y: 55 },
@@ -118,7 +118,7 @@ const FORMATIONS = {
   "3-5-2": [
     { id: "gk", label: "GK", x: 50, y: 92 },
     { id: "lcb", label: "LCB", x: 30, y: 75 },
-    { id: "cb", label: "CB", x: 50, y: 78 },
+    { id: "cb", label: "CB", x: 50, y: 73 },
     { id: "rcb", label: "RCB", x: 70, y: 75 },
     { id: "lm", label: "LM", x: 15, y: 53 },
     { id: "lcm", label: "LCM", x: 32, y: 56 },
@@ -131,7 +131,7 @@ const FORMATIONS = {
   "3-4-2-1": [
     { id: "gk", label: "GK", x: 50, y: 92 },
     { id: "lcb", label: "LCB", x: 30, y: 75 },
-    { id: "cb", label: "CB", x: 50, y: 78 },
+    { id: "cb", label: "CB", x: 50, y: 73 },
     { id: "rcb", label: "RCB", x: 70, y: 75 },
     { id: "lm", label: "LM", x: 16, y: 54 },
     { id: "lcm", label: "LCM", x: 40, y: 57 },
@@ -145,7 +145,7 @@ const FORMATIONS = {
     { id: "gk", label: "GK", x: 50, y: 92 },
     { id: "lwb", label: "LWB", x: 12, y: 70 },
     { id: "lcb", label: "LCB", x: 32, y: 76 },
-    { id: "cb", label: "CB", x: 50, y: 79 },
+    { id: "cb", label: "CB", x: 50, y: 74 },
     { id: "rcb", label: "RCB", x: 68, y: 76 },
     { id: "rwb", label: "RWB", x: 88, y: 70 },
     { id: "lcm", label: "LCM", x: 30, y: 54 },
@@ -158,7 +158,7 @@ const FORMATIONS = {
     { id: "gk", label: "GK", x: 50, y: 92 },
     { id: "lwb", label: "LWB", x: 12, y: 70 },
     { id: "lcb", label: "LCB", x: 32, y: 76 },
-    { id: "cb", label: "CB", x: 50, y: 79 },
+    { id: "cb", label: "CB", x: 50, y: 74 },
     { id: "rcb", label: "RCB", x: 68, y: 76 },
     { id: "rwb", label: "RWB", x: 88, y: 70 },
     { id: "lm", label: "LM", x: 18, y: 49 },
@@ -232,6 +232,8 @@ let selectedMemberId = null;
 let selectedPoolPlayerId = null;
 let selectedRecordMatchId = null;
 let activeMemoSlotId = null;
+let isRecentMatchesCollapsed = false;
+let expandedMatchIds = new Set();
 let recordDraft = {
   participants: new Set(),
   goals: [],
@@ -395,6 +397,8 @@ function resetRuntimeState() {
   selectedPoolPlayerId = null;
   selectedRecordMatchId = null;
   activeMemoSlotId = null;
+  isRecentMatchesCollapsed = false;
+  expandedMatchIds = new Set();
   recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
 }
 
@@ -730,6 +734,46 @@ function renderPlayerMeta(player, prefix = "") {
   return meta ? `<p class="helper-text">${prefix}${escapeHtml(meta)}</p>` : "";
 }
 
+function getWeekdayLabel(dateString) {
+  if (!dateString) return "";
+  const parts = dateString.split("-").map(Number);
+  if (parts.length !== 3 || parts.some((part) => !Number.isFinite(part))) return "";
+  const date = new Date(parts[0], parts[1] - 1, parts[2]);
+  if (Number.isNaN(date.getTime())) return "";
+  return ["일", "월", "화", "수", "목", "금", "토"][date.getDay()];
+}
+
+function formatDateWithWeekday(dateString) {
+  if (!dateString) return "날짜 없음";
+  const weekday = getWeekdayLabel(dateString);
+  return weekday ? `${dateString} (${weekday})` : dateString;
+}
+
+function renderMatchTitleLine(match, className = "match-title-line") {
+  const opponent = getMatchOpponent(match) || "-";
+  if (!match?.date && opponent === "-" && match?.title) {
+    return `
+      <span class="${className}">
+        <span>${escapeHtml(match.title)}</span>
+      </span>
+    `;
+  }
+  return `
+    <span class="${className}">
+      <span>${escapeHtml(formatDateWithWeekday(match?.date))}</span>
+      <span>상대팀: ${escapeHtml(opponent)}</span>
+    </span>
+  `;
+}
+
+function formatGoalAssistSummary(goalCount, assistCount) {
+  return `${goalCount}골 · ${assistCount}어시스트`;
+}
+
+function getMatchGoalAssistSummary(match) {
+  return formatGoalAssistSummary((match?.goals || []).length, (match?.assists || []).length);
+}
+
 function renderMemberDetail() {
   const member = state.members.find((item) => item.id === selectedMemberId);
   if (!member) {
@@ -761,11 +805,23 @@ function renderMemberDetail() {
       ${statPill(stats.goals, "총 득점")}
       ${statPill(stats.assists, "총 도움")}
     </div>
-    <h3>최근 경기 기록</h3>
-    ${recentMatches.length
-      ? `<ul class="recent-list">${recentMatches.map((match) => renderRecentMatch(member.id, match)).join("")}</ul>`
-      : `<p class="empty-text">아직 기록된 경기가 없습니다.</p>`
-    }
+    <div class="detail-section-heading">
+      <h3>최근 경기 기록</h3>
+      <button
+        class="mini-toggle-button"
+        type="button"
+        data-toggle-recent-matches
+        aria-expanded="${String(!isRecentMatchesCollapsed)}"
+      >
+        ${isRecentMatchesCollapsed ? "펼치기 ▼" : "접기 ▲"}
+      </button>
+    </div>
+    <div class="recent-match-panel${isRecentMatchesCollapsed ? " collapsed" : ""}">
+      ${recentMatches.length
+        ? `<ul class="recent-list">${recentMatches.map((match) => renderRecentMatch(member.id, match)).join("")}</ul>`
+        : `<p class="empty-text">아직 기록된 경기가 없습니다.</p>`
+      }
+    </div>
   `;
 }
 
@@ -775,8 +831,8 @@ function renderRecentMatch(memberId, match) {
   const appearance = (match.participants || []).includes(memberId) ? "출전" : "미출전";
   return `
     <li>
-      <strong>${escapeHtml(match.title)}</strong>
-      <p class="helper-text">${escapeHtml(match.date || "-")} · ${appearance} · ${goals}득점 · ${assists}도움</p>
+      ${renderMatchTitleLine(match, "match-title-line recent-match-title")}
+      <p class="helper-text">${appearance} · ${formatGoalAssistSummary(goals, assists)}</p>
     </li>
   `;
 }
@@ -814,7 +870,16 @@ function renderFormation() {
   const quarterButtons = Array.from({ length: state.formation.quarters }, (_, index) => {
     const quarter = index + 1;
     const active = quarter === state.formation.activeQuarter ? " active" : "";
-    return `<button class="quarter-tab-button${active}" type="button" data-quarter="${quarter}">${quarter}쿼터</button>`;
+    const canDelete = state.formation.quarters > 1;
+    return `
+      <span class="quarter-tab-wrap${active}">
+        <button class="quarter-tab-button${active}" type="button" data-quarter="${quarter}">${quarter}쿼터</button>
+        ${canDelete
+          ? `<button class="quarter-delete-button" type="button" data-delete-quarter="${quarter}" aria-label="${quarter}쿼터 삭제" title="${quarter}쿼터 삭제">×</button>`
+          : ""
+        }
+      </span>
+    `;
   }).join("");
   const addButtonDisabled = state.formation.quarters >= MAX_QUARTERS ? "disabled" : "";
   dom.quarterTabs.innerHTML = `${quarterButtons}<button class="quarter-tab-button add-quarter-button" type="button" data-add-quarter ${addButtonDisabled} aria-label="쿼터 추가">+</button>`;
@@ -953,11 +1018,13 @@ function getMatchOpponent(match) {
 }
 
 function formatMatchTitle(date, opponent) {
-  return `${date || "날짜 없음"} 상대팀: ${opponent || "-"}`;
+  return `${formatDateWithWeekday(date)} 상대팀: ${opponent || "-"}`;
 }
 
 function getMatchDisplayTitle(match) {
-  return match?.title || formatMatchTitle(match?.date, getMatchOpponent(match));
+  const opponent = getMatchOpponent(match);
+  if (match?.date || opponent) return formatMatchTitle(match?.date, opponent);
+  return match?.title || formatMatchTitle(match?.date, opponent);
 }
 
 function getMatchPlayerOptions(match) {
@@ -985,10 +1052,9 @@ function renderRecordEditor() {
     return;
   }
 
-  const opponent = getMatchOpponent(match);
   dom.recordSelectedMatchInfo.innerHTML = `
-    <h3>${escapeHtml(getMatchDisplayTitle(match))}</h3>
-    <p class="helper-text">${escapeHtml(match.date || "-")}${opponent ? ` · 상대팀: ${escapeHtml(opponent)}` : ""}</p>
+    <h3>${renderMatchTitleLine(match)}</h3>
+    <p class="helper-text">출전 선수 ${(match.participants || []).length}명 · ${escapeHtml(getMatchGoalAssistSummary(match))}</p>
   `;
 
   const players = getMatchPlayerOptions(match);
@@ -1011,11 +1077,25 @@ function renderRecordEditor() {
 
 function renderDraftLists(match = getSelectedRecordMatch()) {
   dom.goalDraftList.innerHTML = recordDraft.goals.length
-    ? recordDraft.goals.map((event) => `<li>${escapeHtml(getPlayerName(event.playerId, match))} 득점</li>`).join("")
+    ? recordDraft.goals
+      .map((event, index) => `
+        <li class="event-draft-item">
+          <span>${escapeHtml(getPlayerName(event.playerId, match))} 득점</span>
+          <button class="event-delete-button" type="button" data-delete-draft-goal="${index}" aria-label="득점 기록 삭제" title="득점 기록 삭제">×</button>
+        </li>
+      `)
+      .join("")
     : `<li class="empty-text">추가된 득점 기록이 없습니다.</li>`;
 
   dom.assistDraftList.innerHTML = recordDraft.assists.length
-    ? recordDraft.assists.map((event) => `<li>${escapeHtml(getPlayerName(event.playerId, match))} 어시스트</li>`).join("")
+    ? recordDraft.assists
+      .map((event, index) => `
+        <li class="event-draft-item">
+          <span>${escapeHtml(getPlayerName(event.playerId, match))} 어시스트</span>
+          <button class="event-delete-button" type="button" data-delete-draft-assist="${index}" aria-label="어시스트 기록 삭제" title="어시스트 기록 삭제">×</button>
+        </li>
+      `)
+      .join("")
     : `<li class="empty-text">추가된 어시스트 기록이 없습니다.</li>`;
 }
 
@@ -1030,21 +1110,42 @@ function renderMatchList() {
     .reverse()
     .map((match) => {
       const active = match.id === selectedRecordMatchId ? " active" : "";
-      const title = getMatchDisplayTitle(match);
+      const expanded = expandedMatchIds.has(match.id);
       const participantCount = (match.participants || []).length;
-      const goalCount = (match.goals || []).length;
-      const assistCount = (match.assists || []).length;
+      const participantNames = (match.participants || []).map((playerId) => getPlayerName(playerId, match)).join(", ");
+      const goalSummary = formatEventSummary(match.goals || [], "골", match);
+      const assistSummary = formatEventSummary(match.assists || [], "어시스트", match);
       return `
-        <article class="match-card${active}" data-match-id="${match.id}" tabindex="0">
+        <article class="match-card${active}${expanded ? " expanded" : " collapsed"}" data-match-id="${match.id}" tabindex="0">
           <div class="match-card-header">
             <div>
-              <h4>${escapeHtml(title)}</h4>
+              <h4>${renderMatchTitleLine(match)}</h4>
               <p class="match-meta">출전 선수 ${participantCount}명</p>
             </div>
-            <button class="btn btn-outline-danger delete-match-button" type="button" data-delete-match="${match.id}">삭제</button>
+            <div class="match-card-actions">
+              <button
+                class="mini-toggle-button"
+                type="button"
+                data-toggle-match-card="${match.id}"
+                aria-expanded="${String(expanded)}"
+              >
+                ${expanded ? "접기 ▲" : "펼치기 ▼"}
+              </button>
+              <button class="btn btn-outline-danger delete-match-button" type="button" data-delete-match="${match.id}">삭제</button>
+            </div>
           </div>
-          <p>득점 ${goalCount}개 · 어시스트 ${assistCount}개</p>
-          <button class="btn btn-outline-secondary secondary-button select-match-button" type="button" data-select-match="${match.id}">기록 입력</button>
+          <p class="match-score-summary">${escapeHtml(getMatchGoalAssistSummary(match))}</p>
+          ${expanded
+            ? `
+              <div class="match-card-body">
+                <p><strong>출전</strong><span>${escapeHtml(participantNames || "-")}</span></p>
+                <p><strong>득점</strong><span>${escapeHtml(goalSummary)}</span></p>
+                <p><strong>어시스트</strong><span>${escapeHtml(assistSummary)}</span></p>
+                <button class="btn btn-outline-secondary secondary-button select-match-button" type="button" data-select-match="${match.id}">기록 입력</button>
+              </div>
+            `
+            : ""
+          }
         </article>
       `;
     })
@@ -1229,6 +1330,46 @@ function resetCurrentQuarterFormation() {
   setFormationNotice(`${quarter}쿼터 포메이션을 초기화했습니다.`);
 }
 
+function deleteQuarter(quarter) {
+  if (state.formation.quarters <= 1) return;
+  if (!confirm("이 쿼터를 삭제할까요?")) return;
+
+  const previousActiveQuarter = state.formation.activeQuarter;
+  const nextSquads = {};
+  let nextQuarter = 1;
+
+  for (let currentQuarter = 1; currentQuarter <= state.formation.quarters; currentQuarter += 1) {
+    if (currentQuarter === quarter) continue;
+    const sourceSquad = state.formation.squads[currentQuarter] || {
+      shape: state.formation.shape,
+      slots: {},
+    };
+    nextSquads[nextQuarter] = {
+      ...sourceSquad,
+      slots: { ...(sourceSquad.slots || {}) },
+    };
+    nextQuarter += 1;
+  }
+
+  state.formation.quarters -= 1;
+  state.formation.squads = nextSquads;
+
+  if (previousActiveQuarter === quarter) {
+    state.formation.activeQuarter = Math.min(quarter, state.formation.quarters);
+  } else if (previousActiveQuarter > quarter) {
+    state.formation.activeQuarter = previousActiveQuarter - 1;
+  } else {
+    state.formation.activeQuarter = previousActiveQuarter;
+  }
+
+  state.formation.activeQuarter = clamp(state.formation.activeQuarter, 1, state.formation.quarters);
+  selectedPoolPlayerId = null;
+  ensureQuarterData();
+  saveState();
+  renderFormation();
+  setFormationNotice(`${quarter}쿼터를 삭제했습니다.`);
+}
+
 function saveFormationMatch() {
   const matchInfo = getMatchInfo();
   const date = matchInfo.date;
@@ -1341,6 +1482,13 @@ function saveMatch(event) {
   renderAll();
 }
 
+function deleteDraftEvent(type, index) {
+  const list = type === "goal" ? recordDraft.goals : recordDraft.assists;
+  if (!Array.isArray(list) || index < 0 || index >= list.length) return;
+  list.splice(index, 1);
+  renderDraftLists();
+}
+
 function deleteMatch(matchId) {
   const match = state.matches.find((item) => item.id === matchId);
   if (!match) return;
@@ -1348,6 +1496,7 @@ function deleteMatch(matchId) {
   if (!confirm("이 경기 기록을 삭제할까요?")) return;
 
   state.matches = state.matches.filter((item) => item.id !== matchId);
+  expandedMatchIds.delete(matchId);
   if (selectedRecordMatchId === matchId) {
     selectedRecordMatchId = null;
     recordDraft = { participants: new Set(), goals: [], assists: [], hydratedFromFormation: false };
@@ -1561,6 +1710,13 @@ function bindEvents() {
     renderTeam();
   });
 
+  dom.memberDetail.addEventListener("click", (event) => {
+    const toggleButton = event.target.closest("[data-toggle-recent-matches]");
+    if (!toggleButton) return;
+    isRecentMatchesCollapsed = !isRecentMatchesCollapsed;
+    renderMemberDetail();
+  });
+
   dom.prepDateInput.addEventListener("input", () => {
     const matchInfo = getMatchInfo();
     matchInfo.date = dom.prepDateInput.value;
@@ -1613,6 +1769,13 @@ function bindEvents() {
   });
 
   dom.quarterTabs.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-delete-quarter]");
+    if (deleteButton) {
+      event.stopPropagation();
+      deleteQuarter(Number(deleteButton.dataset.deleteQuarter));
+      return;
+    }
+
     const addButton = event.target.closest("[data-add-quarter]");
     if (addButton) {
       if (state.formation.quarters >= MAX_QUARTERS) return;
@@ -1789,6 +1952,18 @@ function bindEvents() {
     renderDraftLists();
   });
 
+  dom.goalDraftList.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-delete-draft-goal]");
+    if (!deleteButton) return;
+    deleteDraftEvent("goal", Number(deleteButton.dataset.deleteDraftGoal));
+  });
+
+  dom.assistDraftList.addEventListener("click", (event) => {
+    const deleteButton = event.target.closest("[data-delete-draft-assist]");
+    if (!deleteButton) return;
+    deleteDraftEvent("assist", Number(deleteButton.dataset.deleteDraftAssist));
+  });
+
   dom.matchList.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("[data-delete-match]");
     if (deleteButton) {
@@ -1797,11 +1972,22 @@ function bindEvents() {
       return;
     }
 
+    const toggleButton = event.target.closest("[data-toggle-match-card]");
+    if (toggleButton) {
+      event.stopPropagation();
+      const matchId = toggleButton.dataset.toggleMatchCard;
+      if (expandedMatchIds.has(matchId)) {
+        expandedMatchIds.delete(matchId);
+      } else {
+        expandedMatchIds.add(matchId);
+      }
+      renderMatchList();
+      return;
+    }
+
     const selectButton = event.target.closest("[data-select-match]");
-    const card = event.target.closest("[data-match-id]");
-    const matchId = selectButton?.dataset.selectMatch || card?.dataset.matchId;
-    if (!matchId) return;
-    loadMatchForRecord(matchId);
+    if (!selectButton) return;
+    loadMatchForRecord(selectButton.dataset.selectMatch);
   });
 
   dom.recordForm.addEventListener("submit", saveMatch);

@@ -75,7 +75,7 @@ button {
   cursor: pointer;
 }
 
-button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member):not(.slot-note-button) {
+button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.quarter-delete-button):not(.icon-delete-member):not(.slot-note-button):not(.mini-toggle-button):not(.event-delete-button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -94,7 +94,7 @@ button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-memb
     box-shadow 0.18s ease;
 }
 
-button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.icon-delete-member):not(.slot-note-button):hover {
+button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.quarter-delete-button):not(.icon-delete-member):not(.slot-note-button):not(.mini-toggle-button):not(.event-delete-button):hover {
   background: var(--green-dark);
   box-shadow: 0 8px 18px rgba(20, 122, 61, 0.18);
   transform: translateY(-1px);
@@ -796,6 +796,46 @@ main {
   padding: 20px;
 }
 
+.detail-section-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+
+.detail-section-heading h3 {
+  margin: 0;
+}
+
+.mini-toggle-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 30px;
+  border: 1px solid var(--jl-nav-border);
+  border-radius: 999px;
+  background: #fff;
+  color: #275c32;
+  padding: 0 10px;
+  font-size: 0.78rem;
+  font-weight: 900;
+  box-shadow: none;
+  transition:
+    background 0.18s ease,
+    border-color 0.18s ease,
+    color 0.18s ease;
+}
+
+.mini-toggle-button:hover {
+  border-color: var(--jl-nav-green);
+  background: var(--jl-nav-green-soft);
+  color: #275c32;
+}
+
+.recent-match-panel.collapsed {
+  display: none;
+}
+
 .recent-list,
 .event-list {
   display: grid;
@@ -812,6 +852,18 @@ main {
   border-radius: 14px;
   background: #fbfffb;
   padding: 12px;
+}
+
+.match-title-line {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 18px;
+}
+
+.recent-match-title {
+  color: var(--ink);
+  font-weight: 900;
 }
 
 .settings-row {
@@ -942,7 +994,13 @@ main {
   background: transparent;
 }
 
-.quarter-tabs button {
+.quarter-tab-wrap {
+  position: relative;
+  flex: 0 0 auto;
+  display: inline-flex;
+}
+
+.quarter-tabs .quarter-tab-button {
   flex: 0 0 auto;
   min-height: 44px;
   border: 1px solid var(--jl-nav-border);
@@ -955,14 +1013,14 @@ main {
   transform: none;
 }
 
-.quarter-tabs button.active {
+.quarter-tabs .quarter-tab-button.active {
   border-color: var(--jl-nav-green);
   background: var(--jl-nav-green);
   color: #fff;
   box-shadow: 0 6px 14px rgba(79, 143, 88, 0.18);
 }
 
-.quarter-tabs button:hover {
+.quarter-tabs .quarter-tab-button:hover {
   border-color: var(--jl-nav-green);
   background: var(--jl-nav-green-soft);
   color: #275c32;
@@ -970,17 +1028,57 @@ main {
   transform: none;
 }
 
-.quarter-tabs button.active:hover {
+.quarter-tabs .quarter-tab-button.active:hover {
   border-color: var(--jl-nav-green-hover);
   background: var(--jl-nav-green-hover);
   color: #fff;
   box-shadow: 0 6px 14px rgba(79, 143, 88, 0.2);
 }
 
-.quarter-tabs button:disabled {
+.quarter-tabs .quarter-tab-button:disabled {
   cursor: not-allowed;
   opacity: 0.5;
   transform: none;
+}
+
+.quarter-delete-button {
+  position: absolute;
+  top: -6px;
+  right: -6px;
+  display: inline-grid;
+  width: 22px;
+  height: 22px;
+  min-height: 22px;
+  place-items: center;
+  border: 1px solid rgba(199, 66, 50, 0.28);
+  border-radius: 999px;
+  background: #fff7f5;
+  color: var(--jl-danger);
+  padding: 0;
+  font-size: 0.88rem;
+  font-weight: 900;
+  line-height: 1;
+  opacity: 0;
+  transform: scale(0.9);
+  box-shadow: 0 6px 12px rgba(199, 66, 50, 0.08);
+  transition:
+    opacity 0.16s ease,
+    transform 0.16s ease,
+    background 0.16s ease,
+    color 0.16s ease,
+    border-color 0.16s ease;
+}
+
+.quarter-tab-wrap:hover .quarter-delete-button,
+.quarter-tab-wrap:focus-within .quarter-delete-button {
+  opacity: 1;
+  transform: scale(1);
+}
+
+.quarter-delete-button:hover {
+  border-color: var(--jl-danger);
+  background: var(--jl-danger);
+  color: #fff;
 }
 
 .add-quarter-button {
@@ -1032,7 +1130,7 @@ main {
 
 .formation-workspace {
   display: grid;
-  grid-template-columns: minmax(0, 3fr) minmax(230px, 1fr);
+  grid-template-columns: minmax(0, 1fr) minmax(300px, 340px);
   gap: 16px;
   align-items: start;
 }
@@ -1068,11 +1166,11 @@ main {
 .squad-board {
   position: relative;
   width: 100%;
-  max-width: 900px;
+  max-width: none;
   min-width: 0;
   height: auto;
   aspect-ratio: 4 / 3;
-  margin: 0 auto;
+  margin: 0;
   overflow: hidden;
   border: 4px solid rgba(255, 255, 255, 0.9);
   border-radius: 16px;
@@ -1263,6 +1361,10 @@ main {
 }
 
 @media (min-width: 901px) {
+  .squad-board {
+    aspect-ratio: 8 / 5;
+  }
+
   .position-slot {
     width: 138px;
     min-height: 82px;
@@ -1339,14 +1441,14 @@ main {
 .player-pool-card {
   position: relative;
   display: grid;
-  gap: 4px;
-  min-height: 58px;
+  gap: 5px;
+  min-height: 68px;
   border: 1px solid var(--line);
-  border-radius: 7px;
+  border-radius: 10px;
   background: #fbfffb;
   color: var(--ink);
   cursor: grab;
-  padding: 9px 10px;
+  padding: 12px 14px;
   transition:
     border 0.18s ease,
     box-shadow 0.18s ease,
@@ -1355,7 +1457,7 @@ main {
 }
 
 .player-pool-card.guest-card {
-  padding-right: 58px;
+  padding-right: 62px;
 }
 
 .player-pool-card:hover {
@@ -1386,12 +1488,13 @@ main {
   justify-content: space-between;
   gap: 8px;
   align-items: center;
+  font-size: 1rem;
   font-weight: 900;
 }
 
 .player-pool-meta {
   color: var(--muted);
-  font-size: 0.86rem;
+  font-size: 0.8rem;
   font-weight: 800;
 }
 
@@ -1498,6 +1601,12 @@ main {
   align-items: start;
 }
 
+@media (min-width: 901px) {
+  .record-columns .event-box {
+    margin-top: 38px;
+  }
+}
+
 .checkbox-list {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
@@ -1541,6 +1650,42 @@ main {
   padding: 16px;
 }
 
+.event-draft-item {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 10px;
+}
+
+.event-delete-button {
+  display: inline-grid;
+  width: 26px;
+  height: 26px;
+  min-height: 26px;
+  place-items: center;
+  border: 1px solid rgba(199, 66, 50, 0.24);
+  border-radius: 999px;
+  background: #fff7f5;
+  color: var(--jl-danger);
+  padding: 0;
+  font-size: 1rem;
+  font-weight: 900;
+  line-height: 1;
+  box-shadow: none;
+  transition:
+    background 0.16s ease,
+    border-color 0.16s ease,
+    color 0.16s ease,
+    box-shadow 0.16s ease;
+}
+
+.event-delete-button:hover {
+  border-color: var(--jl-danger);
+  background: var(--jl-danger);
+  color: #fff;
+  box-shadow: 0 8px 18px rgba(199, 66, 50, 0.16);
+}
+
 .primary-save {
   justify-self: end;
   min-width: 150px;
@@ -1564,7 +1709,7 @@ main {
 }
 
 .match-card[data-match-id] {
-  cursor: pointer;
+  cursor: default;
   transition:
     border 0.18s ease,
     background 0.18s ease,
@@ -1586,6 +1731,42 @@ main {
 .match-card h4 {
   margin: 0;
   font-size: 1.05rem;
+}
+
+.match-card-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.match-card .match-score-summary {
+  margin: 0;
+  color: var(--ink);
+  font-weight: 900;
+}
+
+.match-card-body {
+  display: grid;
+  gap: 8px;
+  border-top: 1px solid var(--line);
+  padding-top: 10px;
+}
+
+.match-card-body p {
+  display: grid;
+  grid-template-columns: 78px minmax(0, 1fr);
+  gap: 8px;
+  margin: 0;
+}
+
+.match-card-body strong {
+  color: var(--ink);
+}
+
+.match-card-body .select-match-button {
+  justify-self: start;
 }
 
 .match-meta,
@@ -1890,6 +2071,11 @@ main {
     opacity: 1;
     transform: scale(1);
   }
+
+  .quarter-delete-button {
+    opacity: 0.82;
+    transform: scale(1);
+  }
 }
 
 /* 데스크톱/태블릿 후보선수 목록 2열 압축 */
@@ -1904,19 +2090,19 @@ main {
 }
 
 .player-pool-card {
-  gap: 4px;
-  min-height: 58px;
-  padding: 9px 10px;
-  border-radius: 7px;
+  gap: 5px;
+  min-height: 68px;
+  padding: 12px 14px;
+  border-radius: 10px;
 }
 
 .player-pool-card.guest-card {
-  padding-right: 58px;
+  padding-right: 62px;
 }
 
 .player-pool-name {
   min-width: 0;
-  font-size: 0.92rem;
+  font-size: 1rem;
   line-height: 1.25;
 }
 
@@ -1927,7 +2113,7 @@ main {
 }
 
 .player-pool-meta {
-  font-size: 0.74rem;
+  font-size: 0.8rem;
   line-height: 1.2;
 }
 
