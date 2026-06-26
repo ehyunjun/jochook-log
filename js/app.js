@@ -181,8 +181,6 @@ const dom = {
   teamNameInput: $("#teamNameInput"),
   createdTeamInfo: $("#createdTeamInfo"),
   teamNameDisplay: $("#teamNameDisplay"),
-  startLoadCloudButton: $("#startLoadCloudButton"),
-  startCloudCodeInput: $("#startCloudCodeInput"),
   saveCloudButton: $("#saveCloudButton"),
   loadCloudButton: $("#loadCloudButton"),
   cloudCodeInput: $("#cloudCodeInput"),
@@ -1619,12 +1617,6 @@ function bindEvents() {
       loadStateFromSupabase(getCloudCodeInputValue(dom.cloudCodeInput));
     });
   }
-  if (dom.startLoadCloudButton) {
-    dom.startLoadCloudButton.addEventListener("click", () => {
-      loadStateFromSupabase(getCloudCodeInputValue(dom.startCloudCodeInput));
-    });
-  }
-
   dom.membersGrid.addEventListener("click", (event) => {
     const deleteButton = event.target.closest("[data-delete-member]");
     if (deleteButton) {

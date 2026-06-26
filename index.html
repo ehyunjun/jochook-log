@@ -34,21 +34,16 @@
       <section class="tab-panel active" id="start" aria-labelledby="start-title">
         <div class="start-layout">
           <div class="intro-block">
-            <div class="start-brand-line">
-              <span class="brand-mark start-brand-mark">JL</span>
-              <span>조축로그</span>
+            <div class="home-copy">
+              <div class="start-brand-line">
+                <span class="brand-mark start-brand-mark">JL</span>
+                <span>조축로그</span>
+              </div>
+              <h2 id="start-title">우리 팀 라인업과 기록을 한 번에</h2>
+              <p class="lead">팀원 관리부터 쿼터별 포메이션, 경기 기록까지 가볍게 정리합니다.</p>
             </div>
-            <h2 id="start-title">우리 팀 라인업과 기록을 한 번에</h2>
-            <p class="lead">팀원 관리부터 쿼터별 포메이션, 경기 기록까지 가볍게 정리합니다.</p>
-            <div class="start-chip-row" aria-label="주요 기능">
-              <span>팀원 관리</span>
-              <span>쿼터별 포메이션</span>
-              <span>경기 기록</span>
-            </div>
-          </div>
 
-          <div class="action-grid">
-            <form class="tool-card start-action-card card" id="createTeamForm">
+            <form class="home-create-panel start-create-form" id="createTeamForm">
               <h3>새 팀 만들기</h3>
               <label for="teamNameInput">팀 이름</label>
               <div class="start-action-row">
@@ -57,16 +52,6 @@
               </div>
               <p class="helper-text" id="createdTeamInfo">팀을 만든 뒤 팀원을 등록해 주세요.</p>
             </form>
-
-            <div class="tool-card start-action-card card">
-              <h3>팀 코드로 불러오기</h3>
-              <label for="startCloudCodeInput">공유 코드</label>
-              <div class="start-action-row">
-                <input class="form-control" id="startCloudCodeInput" type="text" placeholder="예: JCL-ABC123" autocomplete="off" data-cloud-code-input />
-                <button class="btn btn-outline-secondary secondary-button" type="button" id="startLoadCloudButton">팀 정보 불러오기</button>
-              </div>
-              <p class="helper-text">저장해 둔 팀원, 포메이션, 경기 기록을 다시 불러옵니다.</p>
-            </div>
           </div>
         </div>
       </section>
