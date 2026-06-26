@@ -75,7 +75,7 @@ button {
   cursor: pointer;
 }
 
-button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.quarter-delete-button):not(.icon-delete-member):not(.slot-note-button):not(.mini-toggle-button):not(.event-delete-button) {
+button:not(.btn):not(.tab-button):not(.nav-menu-toggle):not(.quarter-tab-button):not(.quarter-delete-button):not(.icon-delete-member):not(.slot-note-button):not(.mini-toggle-button):not(.event-delete-button) {
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -94,7 +94,7 @@ button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.quarter-delete-b
     box-shadow 0.18s ease;
 }
 
-button:not(.btn):not(.tab-button):not(.quarter-tab-button):not(.quarter-delete-button):not(.icon-delete-member):not(.slot-note-button):not(.mini-toggle-button):not(.event-delete-button):hover {
+button:not(.btn):not(.tab-button):not(.nav-menu-toggle):not(.quarter-tab-button):not(.quarter-delete-button):not(.icon-delete-member):not(.slot-note-button):not(.mini-toggle-button):not(.event-delete-button):hover {
   background: var(--green-dark);
   box-shadow: 0 8px 18px rgba(20, 122, 61, 0.18);
   transform: translateY(-1px);
@@ -121,6 +121,7 @@ textarea {
   border-radius: 10px;
   background: #fff;
   color: var(--ink);
+  font-size: 1rem;
   box-shadow: none;
 }
 
@@ -132,6 +133,7 @@ textarea {
 
 .btn {
   border-radius: 10px;
+  font-size: 0.98rem;
   font-weight: 800;
   letter-spacing: 0;
   transition:
@@ -192,7 +194,7 @@ label {
   display: grid;
   gap: 7px;
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 700;
 }
 
@@ -236,10 +238,12 @@ main {
   position: static;
   z-index: 20;
   display: grid;
-  gap: 0;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: 20px;
+  align-items: center;
   width: min(var(--jl-page-width), calc(100% - 48px));
-  margin: 14px auto 28px;
-  padding: 18px 24px;
+  margin: 14px auto 24px;
+  padding: 14px 20px;
   border: 1px solid var(--line);
   border-radius: 18px;
   background: rgba(255, 255, 255, 0.96);
@@ -251,7 +255,8 @@ main {
   display: flex;
   justify-content: space-between;
   gap: 16px;
-  align-items: start;
+  align-items: center;
+  min-width: 0;
 }
 
 .brand {
@@ -281,15 +286,38 @@ main {
   font-weight: 900;
 }
 
+.nav-menu-toggle {
+  display: none;
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid var(--jl-nav-border);
+  border-radius: 14px;
+  background: #fff;
+  color: #275c32;
+  padding: 0;
+  font-size: 1.22rem;
+  font-weight: 900;
+  box-shadow: none;
+}
+
+.nav-menu-toggle:hover {
+  border-color: var(--jl-nav-green);
+  background: var(--jl-nav-green-soft);
+  color: #275c32;
+  box-shadow: none;
+  transform: none;
+}
+
 .top-tabs {
   display: flex;
+  justify-content: flex-end;
   gap: 10px;
-  overflow-x: auto;
+  overflow-x: visible;
   overflow-y: visible;
-  width: 100%;
+  width: auto;
   max-width: 100%;
-  margin-top: 16px;
-  padding: 2px 0 4px;
+  margin-top: 0;
+  padding: 0;
   border-radius: 0;
   background: transparent;
 }
@@ -302,6 +330,7 @@ main {
   background: #fff;
   color: #275c32;
   padding: 0 18px;
+  font-size: 0.98rem;
   font-weight: 900;
   box-shadow: none;
   transform: none;
@@ -402,7 +431,7 @@ main {
   background: var(--jl-nav-green-soft);
   color: #275c32;
   padding: 8px 12px;
-  font-size: 0.86rem;
+  font-size: 0.94rem;
   font-weight: 900;
 }
 
@@ -460,7 +489,7 @@ main {
 .match-prep-card h3,
 .event-box h3,
 .detail-panel h3 {
-  font-size: 1.05rem;
+  font-size: 1.12rem;
 }
 
 .inline-form {
@@ -481,7 +510,7 @@ main {
 .helper-text,
 .empty-text {
   color: var(--muted);
-  font-size: 0.92rem;
+  font-size: 1rem;
   line-height: 1.5;
 }
 
@@ -550,13 +579,13 @@ main {
   display: block;
   margin-bottom: 6px;
   color: var(--muted);
-  font-size: 0.82rem;
+  font-size: 0.92rem;
   font-weight: 800;
 }
 
 .team-info>div:first-child .label-text {
   color: var(--jl-muted);
-  font-size: 1.02rem;
+  font-size: 1.07rem;
   font-weight: 900;
   letter-spacing: -0.01em;
 }
@@ -595,7 +624,7 @@ main {
 }
 
 .share-url-row input {
-  font-size: 0.84rem;
+  font-size: 0.94rem;
 }
 
 .share-code-row {
@@ -681,7 +710,7 @@ main {
 }
 
 .member-name {
-  font-size: 1.08rem;
+  font-size: 1.18rem;
   font-weight: 900;
 }
 
@@ -693,7 +722,7 @@ main {
   background: var(--green-soft);
   color: var(--green-dark);
   padding: 0 9px;
-  font-size: 0.78rem;
+  font-size: 0.86rem;
   font-weight: 900;
 }
 
@@ -754,12 +783,12 @@ main {
 }
 
 .stat-pill strong {
-  font-size: 1.25rem;
+  font-size: 1.35rem;
 }
 
 .stat-pill span {
   color: var(--muted);
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 800;
 }
 
@@ -793,7 +822,7 @@ main {
   background: #fff;
   color: #275c32;
   padding: 0 10px;
-  font-size: 0.78rem;
+  font-size: 0.88rem;
   font-weight: 900;
   box-shadow: none;
   transition:
@@ -886,7 +915,7 @@ main {
 
 .sub-title {
   margin: 0 0 10px;
-  font-size: 0.95rem;
+  font-size: 1.05rem;
 }
 
 .prep-participant-list {
@@ -1087,7 +1116,7 @@ main {
 .formation-toolbar button {
   min-height: 36px;
   padding: 0 12px;
-  font-size: 0.9rem;
+  font-size: 0.98rem;
 }
 
 .formation-save-row {
@@ -1102,7 +1131,7 @@ main {
   justify-self: end;
   min-height: 36px;
   padding: 0 12px;
-  font-size: 0.9rem;
+  font-size: 0.98rem;
 }
 
 .formation-workspace {
@@ -1125,7 +1154,7 @@ main {
   border-radius: 18px;
   background: linear-gradient(180deg, #ffffff, var(--surface-strong));
   color: var(--jl-ink);
-  font-size: 0.95rem;
+  font-size: 1.02rem;
   font-weight: 700;
   letter-spacing: -0.02em;
   padding: 10px 12px;
@@ -1249,7 +1278,7 @@ main {
 
 .slot-label {
   color: var(--green-dark);
-  font-size: 0.78rem;
+  font-size: 0.84rem;
   font-weight: 900;
   text-align: center;
 }
@@ -1282,7 +1311,7 @@ main {
   display: -webkit-box;
   overflow: hidden;
   color: var(--muted);
-  font-size: 0.66rem;
+  font-size: 0.74rem;
   font-weight: 800;
   line-height: 1.2;
   -webkit-box-orient: vertical;
@@ -1368,7 +1397,7 @@ main {
   }
 
   .slot-note {
-    font-size: 0.74rem;
+    font-size: 0.8rem;
   }
 }
 
@@ -1393,7 +1422,7 @@ main {
 }
 
 .player-pool-panel h3 {
-  font-size: 1.05rem;
+  font-size: 1.12rem;
 }
 
 .player-pool-header {
@@ -1464,7 +1493,7 @@ main {
   gap: 8px;
   align-items: center;
   min-width: 0;
-  font-size: 1rem;
+  font-size: 1.06rem;
   font-weight: 900;
   line-height: 1.25;
 }
@@ -1477,7 +1506,7 @@ main {
 
 .player-pool-meta {
   color: var(--muted);
-  font-size: 0.8rem;
+  font-size: 0.88rem;
   font-weight: 800;
   line-height: 1.2;
 }
@@ -1496,7 +1525,7 @@ main {
 .guest-actions button {
   min-height: 22px;
   padding: 0 5px;
-  font-size: 0.64rem;
+  font-size: 0.7rem;
 }
 
 .player-pool-card:hover .guest-actions,
@@ -1519,7 +1548,7 @@ main {
   width: 100%;
   min-height: 36px;
   margin-top: 2px;
-  font-size: 0.88rem;
+  font-size: 0.96rem;
 }
 
 .memo-modal {
@@ -1602,7 +1631,7 @@ main {
   background: var(--surface-strong);
   color: var(--ink);
   padding: 0 10px;
-  font-size: 0.86rem;
+  font-size: 0.96rem;
   font-weight: 800;
 }
 
@@ -1704,7 +1733,7 @@ main {
 
 .match-card h4 {
   margin: 0;
-  font-size: 1.05rem;
+  font-size: 1.12rem;
 }
 
 .match-card-header {
@@ -1726,7 +1755,7 @@ main {
   align-items: center;
   gap: 4px 12px;
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.98rem;
   font-weight: 800;
   line-height: 1.25;
 }
@@ -1824,6 +1853,7 @@ main {
   }
 
   .app-header {
+    grid-template-columns: 1fr;
     width: min(100% - 20px, var(--jl-page-width));
     gap: 12px;
     margin-top: 10px;
@@ -1833,16 +1863,44 @@ main {
   }
 
   .header-main {
-    display: grid;
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    align-items: center;
   }
 
   .brand {
-    align-items: flex-start;
+    align-items: center;
   }
 
   .brand-mark {
     width: 42px;
     height: 42px;
+  }
+
+  .nav-menu-toggle {
+    display: inline-grid;
+    place-items: center;
+    flex: 0 0 auto;
+  }
+
+  .top-tabs {
+    display: none;
+    width: 100%;
+    margin-top: 0;
+    padding-top: 10px;
+    border-top: 1px solid var(--line);
+  }
+
+  .top-tabs.is-open {
+    display: grid;
+    gap: 8px;
+  }
+
+  .top-tabs .tab-button {
+    width: 100%;
+    justify-content: flex-start;
+    min-height: 42px;
   }
 
   .intro-block,
@@ -1865,7 +1923,6 @@ main {
     grid-template-columns: 1fr;
   }
 
-  .top-tabs,
   .quarter-tabs {
     width: 100%;
   }
@@ -2020,11 +2077,11 @@ main {
   }
 
   .player-pool-name {
-    font-size: 0.9rem;
+    font-size: 0.94rem;
   }
 
   .player-pool-meta {
-    font-size: 0.72rem;
+    font-size: 0.78rem;
   }
 
   .primary-save {
@@ -2069,7 +2126,7 @@ main {
   border: 1px solid rgba(199, 66, 50, 0.34);
   background: #fff7f5;
   color: var(--danger);
-  font-size: 0.78rem;
+  font-size: 0.86rem;
 }
 
 .delete-match-button:hover {

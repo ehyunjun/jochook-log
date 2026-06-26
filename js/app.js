@@ -175,6 +175,8 @@ const $$ = (selector) => Array.from(document.querySelectorAll(selector));
 const dom = {
   tabButtons: $$(".tab-button"),
   tabPanels: $$(".tab-panel"),
+  topTabs: $("#mainNav"),
+  navMenuToggle: $("#navMenuToggle"),
   createTeamForm: $("#createTeamForm"),
   teamNameInput: $("#teamNameInput"),
   createdTeamInfo: $("#createdTeamInfo"),
@@ -598,6 +600,11 @@ function renderAll() {
   renderRecords();
 }
 
+function closeMobileNav() {
+  dom.topTabs?.classList.remove("is-open");
+  dom.navMenuToggle?.setAttribute("aria-expanded", "false");
+}
+
 function setActiveTab(tabId) {
   dom.tabButtons.forEach((button) => {
     button.classList.toggle("active", button.dataset.tab === tabId);
@@ -605,6 +612,7 @@ function setActiveTab(tabId) {
   dom.tabPanels.forEach((panel) => {
     panel.classList.toggle("active", panel.id === tabId);
   });
+  closeMobileNav();
   if (tabId === "formation") {
     requestAnimationFrame(syncPlayerPoolHeight);
   }
@@ -1569,6 +1577,11 @@ function escapeHtml(value) {
 function bindEvents() {
   dom.tabButtons.forEach((button) => {
     button.addEventListener("click", () => setActiveTab(button.dataset.tab));
+  });
+
+  dom.navMenuToggle?.addEventListener("click", () => {
+    const isOpen = dom.topTabs?.classList.toggle("is-open") || false;
+    dom.navMenuToggle.setAttribute("aria-expanded", String(isOpen));
   });
 
   dom.createTeamForm.addEventListener("submit", (event) => {
