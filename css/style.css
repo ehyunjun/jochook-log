@@ -488,15 +488,15 @@ main {
   padding: 20px;
 }
 
-.start-action-row {
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 10px;
-  align-items: end;
+.home-create-actions {
+  display: flex;
+  justify-content: space-between;
+  gap: 16px;
+  align-items: center;
 }
 
-.start-action-row button {
-  justify-self: start;
+.home-create-actions button {
+  flex: 0 0 auto;
   white-space: nowrap;
 }
 
@@ -1962,12 +1962,14 @@ main {
     padding: 16px;
   }
 
-  .start-action-row {
-    grid-template-columns: 1fr;
+  .home-create-actions {
+    align-items: stretch;
+    flex-direction: column;
+    gap: 10px;
   }
 
-  .start-action-row button {
-    justify-self: stretch;
+  .home-create-actions button {
+    width: 100%;
   }
 
   .quarter-tabs {
