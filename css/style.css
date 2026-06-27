@@ -270,17 +270,14 @@ main {
 }
 
 .brand-mark {
-  display: inline-grid;
-  width: 36px;
-  height: 36px;
-  place-items: center;
+  display: block;
+  flex: 0 0 auto;
+  width: 38px;
+  height: 38px;
+  object-fit: contain;
   border: 0;
-  border-radius: 11px;
-  background: var(--jl-nav-green);
-  color: #fff;
-  font-size: 0.95rem;
-  font-weight: 900;
-  letter-spacing: 0;
+  border-radius: 0;
+  background: transparent;
   box-shadow: none;
 }
 
@@ -438,6 +435,15 @@ main {
   color: var(--muted);
   font-size: 1.02rem;
   line-height: 1.65;
+}
+
+.home-flow {
+  max-width: 760px;
+  color: #315f3b;
+  font-size: 0.98rem;
+  font-weight: 800;
+  line-height: 1.7;
+  word-break: keep-all;
 }
 
 .eyebrow {
@@ -1891,9 +1897,9 @@ main {
   }
 
   .brand-mark {
-    width: 34px;
-    height: 34px;
-    border-radius: 10px;
+    width: 32px;
+    height: 32px;
+    border-radius: 0;
   }
 
   .nav-menu-toggle {
