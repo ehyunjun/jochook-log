@@ -404,13 +404,13 @@ main {
 .intro-block {
   display: grid;
   grid-template-columns: minmax(0, 1.2fr) minmax(360px, 0.8fr);
-  align-content: start;
+  align-content: center;
   align-items: center;
-  gap: 18px;
+  gap: 32px;
   min-height: 0;
   width: 100%;
   margin: 0;
-  padding: 36px;
+  padding: 34px 36px;
   border: 1px solid rgba(20, 122, 61, 0.14);
   border-radius: 20px;
   background: #fff;
@@ -420,24 +420,10 @@ main {
 
 .home-copy {
   display: grid;
-  gap: 18px;
+  align-self: center;
+  gap: 14px;
   min-width: 0;
-}
-
-.start-brand-line {
-  display: inline-flex;
-  width: fit-content;
-  align-items: center;
-  gap: 10px;
-  color: #275c32;
-  font-weight: 900;
-}
-
-.start-brand-mark {
-  width: 40px;
-  height: 40px;
-  border-radius: 12px;
-  box-shadow: none;
+  padding-top: 0;
 }
 
 .intro-block h2 {
@@ -469,13 +455,13 @@ main {
 }
 
 .home-create-panel {
-  align-self: stretch;
+  align-self: center;
   align-content: center;
   min-width: 0;
   border: 1px solid rgba(20, 122, 61, 0.13);
   border-radius: 18px;
   background: #f7fbf7;
-  padding: 24px;
+  padding: 22px;
 }
 
 .tool-card,
@@ -1966,6 +1952,10 @@ main {
 
   .intro-block h2 {
     font-size: clamp(1.8rem, 8vw, 2.6rem);
+  }
+
+  .home-copy {
+    padding-top: 0;
   }
 
   .home-create-panel {
